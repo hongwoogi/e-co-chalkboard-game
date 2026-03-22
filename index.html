@@ -919,11 +919,11 @@
           <div class="settings-divider"></div>
 
           <span class="settings-label">👥 플레이어 수</span>
-          <div class="chip-group" id="player-chips">
-            <button class="chip active" data-count="1">1명</button>
-            <button class="chip" data-count="2">2명</button>
-            <button class="chip" data-count="3">3명</button>
-            <button class="chip" data-count="4">4명</button>
+          <div class="chip-group" id="player-chips" style="flex-wrap:nowrap;">
+            <button class="chip active" data-count="1">1</button>
+            <button class="chip" data-count="2">2</button>
+            <button class="chip" data-count="3">3</button>
+            <button class="chip" data-count="4">4</button>
           </div>
 
           <div id="layout-submenu">
@@ -945,8 +945,7 @@
           <div class="chip-group" id="time-chips">
             <button class="chip" data-time="30">30초</button>
             <button class="chip active" data-time="60">1분</button>
-            <button class="chip" data-time="90">1분 30초</button>
-            <button class="chip" data-time="120">2분</button>
+            <button class="chip" data-time="100">100초</button>
           </div>
 
           <div class="settings-divider"></div>
@@ -970,10 +969,7 @@
 
           <button class="btn-start" id="btn-start">▶ 게임 시작!</button>
 
-          <div class="settings-divider"></div>
-
           <button class="btn-lb-sidebar" id="btn-open-lb">🏆 리더보드</button>
-          <button class="btn-sfx-toggle" id="btn-sfx-toggle">🔊 효과음 켜짐</button>
 
         </div>
       </div>
@@ -983,17 +979,16 @@
         <span class="top-logo-m">🎮</span>
         <div class="top-vr"></div>
         <div class="chip-row" id="player-chips-m">
-          <button class="chip active" data-count="1">1명</button>
-          <button class="chip" data-count="2">2명</button>
-          <button class="chip" data-count="3">3명</button>
-          <button class="chip" data-count="4">4명</button>
+          <button class="chip active" data-count="1">1</button>
+          <button class="chip" data-count="2">2</button>
+          <button class="chip" data-count="3">3</button>
+          <button class="chip" data-count="4">4</button>
         </div>
         <div class="top-vr"></div>
         <div class="chip-row" id="time-chips-m">
           <button class="chip" data-time="30">30s</button>
-          <button class="chip active" data-time="60">60s</button>
-          <button class="chip" data-time="90">90s</button>
-          <button class="chip" data-time="120">2m</button>
+          <button class="chip active" data-time="60">1m</button>
+          <button class="chip" data-time="100">100s</button>
         </div>
         <div class="top-spacer"></div>
         <button id="btn-start-mobile">▶ 시작!</button>
@@ -1485,20 +1480,6 @@
         document.getElementById('screen-home').style.display = 'flex';
         document.getElementById('btn-back-home').style.display = 'none';
       });
-
-      /* ── Sound toggle ── */
-      (function() {
-        const btn = document.getElementById('btn-sfx-toggle');
-        function updateLabel() {
-          btn.textContent = window.SoundEngine?.muted ? '🔇 효과음 꺼짐' : '🔊 효과음 켜짐';
-        }
-        updateLabel();
-        btn.addEventListener('click', () => {
-          window.SoundEngine?.toggle();
-          updateLabel();
-          window.SoundEngine?.play('click');
-        });
-      })();
 
       /* ── UI sounds ── */
       document.querySelectorAll('.game-card').forEach(c => {
