@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+  games/game-select.html
+  Standalone game selection page.
+
+  This file is a standalone version of the game-select view.
+  In normal gameplay it is NOT loaded as an iframe — the game-select
+  UI is rendered inline by layout-manager.js. This file exists as:
+    1. A reference / preview of the card layout
+    2. A fallback if someone navigates here directly
+
+  It accepts a URL query parameter: ?panel=0 (player index)
+  and posts a message back to the parent window when a game is chosen.
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>게임 선택</title>
+
+  <link rel="stylesheet" href="../css/design-system.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--background);
+    }
+
+    /* ── Header ─────────────────────────── */
+    .gs-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container);
+      border-bottom: 2px solid var(--outline-variant);
+    }
+
+    .gs-header-title {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      color: var(--on-surface);
+    }
+
+    .gs-player-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-full);
+      font-family: var(--font-display);
+      font-size: var(--text-md);
+      background: var(--player-color, var(--primary));
+      color: var(--background);
+    }
+
+    /* ── Card grid ───────────────────────── */
+    .gs-grid {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(160px, 45%), 1fr));
+      gap: var(--space-md);
+      padding: var(--space-md);
+      align-content: start;
+
+      /* Smooth momentum scrolling on iOS */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Footer hint ─────────────────────── */
+    .gs-footer {
+      flex-shrink: 0;
+      text-align: center;
+      padding: var(--space-sm);
+      font-family: var(--font-body);
+      font-size: var(--text-xs);
+      color: var(--on-surface-variant);
+    }
+  </style>
+</head>
+<body class="chalk-bg">
+
+  <!-- Header -->
+  <header class="gs-header">
+    <h1 class="gs-header-title">🎮 게임 선택</h1>
+    <div class="gs-player-badge" id="player-badge">P1</div>
+  </header>
+
+  <!-- Game card grid — populated by JS below -->
+  <main class="gs-grid" id="game-grid" role="list"></main>
+
+  <!-- Footer -->
+  <footer class="gs-footer">카드를 탭해서 게임을 시작하세요 ✨</footer>
+
+  <!-- Scripts -->
+  <script src="../js/game-registry.js"></script>
+  <script>
+    'use strict';
+
+    /* ── Read query params ─────────────────── */
+    const params      = new URLSearchParams(window.location.search);
+    const panelIndex  = parseInt(params.get('panel') || '0', 10);
+
+    /* ── Player colour mapping ─────────────── */
+    const PLAYER_COLORS = [
+      'var(--color-player-1)',
+      'var(--color-player-2)',
+      'var(--color-player-3)',
+      'var(--color-player-4)',
+    ];
+    const PLAYER_LABELS = ['P1', 'P2', 'P3', 'P4'];
+
+    /* ── Apply player theming ──────────────── */
+    const badge = document.getElementById('player-badge');
+    const color = PLAYER_COLORS[panelIndex] || PLAYER_COLORS[0];
+    badge.textContent = PLAYER_LABELS[panelIndex] || 'P1';
+    badge.style.setProperty('--player-color', color);
+    document.documentElement.style.setProperty('--panel-color', color);
+
+    /* ── Render game cards ─────────────────── */
+    const grid = document.getElementById('game-grid');
+
+    window.GAMES.forEach((game, i) => {
+      const card = document.createElement('div');
+      card.className = 'game-card' + (game.available ? '' : ' locked');
+      card.style.setProperty('--card-color', game.color);
+      card.setAttribute('role', 'listitem');
+
+      // Sticker
+      let sticker = '';
+      if (game.isNew) {
+        sticker = `<span class="sticker sticker-new">NEW</span>`;
+      } else if (game.isHot) {
+        sticker = `<span class="sticker sticker-hot">HOT 🔥</span>`;
+      }
+
+      card.innerHTML = `
+        ${sticker}
+        <div class="game-card-icon">${game.icon}</div>
+        <div class="game-card-name">${game.name}</div>
+        <div class="game-card-desc">${game.available ? game.description : '🔒 준비 중'}</div>
+      `;
+
+      // Entrance animation
+      card.style.opacity   = '0';
+      card.style.transform = 'translateY(24px) scale(0.88)';
+      card.style.transition = `opacity 0.3s ease ${i * 60}ms, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) ${i * 60}ms`;
+
+      if (game.available) {
+        const launch = (e) => {
+          e.preventDefault();
+          // Post message to parent frame (if embedded)
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type:        'game-selected',
+              panelIndex:  panelIndex,
+              gameId:      game.id,
+            }, '*');
+          } else {
+            // Standalone: redirect back to main page
+            window.location.href = `../index.html?autostart=${game.id}&panel=${panelIndex}`;
+          }
+        };
+
+        card.addEventListener('click',    launch);
+        card.addEventListener('touchend', launch, { passive: false });
+      }
+
+      grid.appendChild(card);
+
+      // Trigger animation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          card.style.opacity   = '';
+          card.style.transform = '';
+        });
+      });
+    });
+
+    /* ── Handle touch scroll vs tap ─────────── */
+    document.addEventListener('touchmove', e => {
+      // Allow scrolling on the grid, block elsewhere
+      if (!e.target.closest('.gs-grid')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+
+</body>
+</html>
