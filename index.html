@@ -125,6 +125,9 @@
       color: #4a2f10;
     }
 
+    /* Equal-width chips for player/time rows */
+    #player-chips .chip, #time-chips .chip { flex: 1; }
+
     /* Active chip styles */
     #player-chips .chip.active {
       background: #4f86f7;
@@ -919,7 +922,7 @@
           <div class="settings-divider"></div>
 
           <span class="settings-label">👥 플레이어 수</span>
-          <div class="chip-group" id="player-chips" style="display:flex;flex-wrap:nowrap;">
+          <div class="chip-group" id="player-chips" style="display:flex;flex-wrap:nowrap;width:100%;">
             <button class="chip active" data-count="1">1</button>
             <button class="chip" data-count="2">2</button>
             <button class="chip" data-count="3">3</button>
@@ -942,7 +945,7 @@
           <div class="settings-divider"></div>
 
           <span class="settings-label">⏱ 제한 시간</span>
-          <div class="chip-group" id="time-chips" style="display:flex;flex-wrap:nowrap;">
+          <div class="chip-group" id="time-chips" style="display:flex;flex-wrap:nowrap;width:100%;">
             <button class="chip" data-time="30">30초</button>
             <button class="chip active" data-time="60">1분</button>
             <button class="chip" data-time="100">100초</button>
