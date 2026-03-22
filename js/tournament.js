@@ -41,45 +41,39 @@
   function assignParticipants(bracket, N, M) {
     const nums = shuffle(Array.from({ length: N }, (_, i) => String(i + 1)));
     let idx = 0;
-    const round0 = bracket[0];
-    const numByes = round0.length * M - N;
-
-    // Place byes at the FRONT matches (one bye per match, last slot of match)
-    // so bye-receivers fall into the FIRST grouping in round 1 → guaranteed opponent
-    round0.forEach((match, mi) => {
-      const hasBye = mi < numByes;
+    // Sequential assignment: byes naturally fall at the END (last match gets null slots)
+    for (const match of bracket[0]) {
       for (let s = 0; s < M; s++) {
-        if (hasBye && s === M - 1) {
-          match.players[s] = null;        // bye in last slot of this match
-        } else {
-          match.players[s] = idx < nums.length ? nums[idx++] : null;
-        }
+        match.players[s] = idx < nums.length ? nums[idx++] : null;
       }
-    });
+    }
     return nums;
   }
 
-  /** Draw SVG bracket connector lines between rounds */
+  /** Draw SVG bracket connector lines with alternating-shift grouping.
+   *  Even transitions (ri=0,2,...): shift remainder to front → bye moves to start of next round
+   *  Odd transitions (ri=1,3,...): normal grouping → bye falls to end again
+   *  Result: bye-receiver never gets two consecutive byes.
+   */
   function drawConnectors(bracket, roundEls, connEls) {
+    const M = bracket[0][0].players.length; // players per match
+
     bracket.forEach((round, ri) => {
       if (ri >= bracket.length - 1) return;
-      const nextRound = bracket[ri + 1];
       const connEl = connEls[ri];
       const connRect = connEl.getBoundingClientRect();
       if (connRect.height === 0) return;
 
-      const curMatchArr = Array.from(roundEls[ri].querySelectorAll('.tm-match'));
-      const nextMatches = roundEls[ri + 1].querySelectorAll('.tm-match');
-      const groupSize = Math.ceil(round.length / nextRound.length);
+      const curMatches = Array.from(roundEls[ri].querySelectorAll('.tm-match'));
+      const nextMatches = Array.from(roundEls[ri + 1].querySelectorAll('.tm-match'));
+      const numInputs = curMatches.length;
+      const remainder = numInputs % M;
 
-      // Alternating direction: odd transitions use reversed source order
-      // so bye-receivers from even rounds always meet real opponents in odd rounds
-      const useReverse = ri % 2 === 1;
-      const curMatches = useReverse ? [...curMatchArr].reverse() : curMatchArr;
+      // Even transitions: shift remainder to front (bye moves from end → start)
+      const useShift = remainder > 0 && ri % 2 === 0;
 
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;';
-
       const color = 'rgba(200,160,110,0.65)';
 
       nextMatches.forEach((nextMatchEl, nmi) => {
@@ -87,12 +81,26 @@
         const destY = nextRect.top + nextRect.height / 2 - connRect.top;
         const midX = connRect.width / 2;
 
-        const srcStart = nmi * groupSize;
-        const srcEnd = Math.min(srcStart + groupSize, curMatches.length);
+        // Compute source index range for this next-round match
+        let srcStart, srcCount;
+        if (useShift) {
+          // First group gets only `remainder` sources (bye at start of next round)
+          // subsequent groups get M sources each
+          srcStart = nmi === 0 ? 0 : remainder + (nmi - 1) * M;
+          srcCount = nmi === 0 ? remainder : M;
+        } else {
+          // Normal: each group gets M sources, last may have fewer
+          srcStart = nmi * M;
+          srcCount = M;
+        }
+
         const srcYs = [];
-        for (let i = srcStart; i < srcEnd; i++) {
-          const r = curMatches[i].getBoundingClientRect();
-          srcYs.push(r.top + r.height / 2 - connRect.top);
+        for (let k = 0; k < srcCount; k++) {
+          const idx = srcStart + k;
+          if (idx < curMatches.length) {
+            const r = curMatches[idx].getBoundingClientRect();
+            srcYs.push(r.top + r.height / 2 - connRect.top);
+          }
         }
         if (!srcYs.length) return;
 
@@ -105,11 +113,7 @@
         };
 
         srcYs.forEach(sy => addLine(0, sy, midX, sy));
-
-        if (srcYs.length > 1) {
-          addLine(midX, Math.min(...srcYs), midX, Math.max(...srcYs));
-        }
-
+        if (srcYs.length > 1) addLine(midX, Math.min(...srcYs), midX, Math.max(...srcYs));
         const midY = (Math.min(...srcYs) + Math.max(...srcYs)) / 2;
         addLine(midX, midY, connRect.width, destY);
 
