@@ -202,7 +202,10 @@
       border-bottom:2px solid rgba(200,160,110,0.15);flex-shrink:0;
     `;
     header.innerHTML = `
-      <span style="font-family:var(--font-display);font-size:clamp(1.4rem,2.8vw,2.2rem);color:#2c1a0e;">🏆 토너먼트</span>
+      <div style="display:flex;flex-direction:column;gap:0.2rem;">
+        <span style="font-family:var(--font-display);font-size:clamp(1.4rem,2.8vw,2.2rem);color:#2c1a0e;">🏆 토너먼트</span>
+        <span id="tm-status" style="display:none;font-family:var(--font-body);font-size:0.85rem;font-weight:700;color:#ff8c42;"></span>
+      </div>
       <button id="tm-close-btn" style="background:rgba(180,130,80,0.1);border:none;font-size:1.3rem;width:2.2em;height:2.2em;border-radius:50%;cursor:pointer;color:#7a5535;display:flex;align-items:center;justify-content:center;">✕</button>
     `;
 
@@ -310,6 +313,26 @@
         return;
       }
 
+      // Current match position (from saved data when tournament is active)
+      const saved = load();
+      const curR = (saved?.active && saved.currentRound != null) ? saved.currentRound : -1;
+      const curM = (saved?.active && saved.currentMatch != null) ? saved.currentMatch : -1;
+
+      // Update header status
+      const statusEl = document.getElementById('tm-status');
+      if (statusEl) {
+        if (curR >= 0 && curR < bracket.length) {
+          const label = getRoundLabel(curR, bracket.length);
+          statusEl.textContent = `▶ ${label} ${curM + 1}경기 진행 중`;
+          statusEl.style.display = '';
+        } else if (saved && !saved.active && generated) {
+          statusEl.textContent = '🏆 토너먼트 종료';
+          statusEl.style.display = '';
+        } else {
+          statusEl.style.display = 'none';
+        }
+      }
+
       const totalRounds = bracket.length;
       const roundEls = [];
       const connEls = [];
@@ -327,17 +350,27 @@
         const matchesWrap = document.createElement('div');
         matchesWrap.style.cssText = `display:flex;flex-direction:column;justify-content:space-around;flex:1;`;
 
-        round.forEach((match) => {
+        round.forEach((match, mi) => {
+          const isCurrent = ri === curR && mi === curM;
+          const isPast = ri < curR || (ri === curR && mi < curM);
+
           const wrap = document.createElement('div');
           wrap.style.cssText = `flex:1;display:flex;flex-direction:column;justify-content:center;min-height:${matchH}px;`;
 
           const matchEl = document.createElement('div');
           matchEl.className = 'tm-match';
           matchEl.style.cssText = `
-            background:#fff;border:1.5px solid rgba(200,160,110,0.35);
+            background:${isCurrent ? '#fff8e7' : isPast ? '#f5f5f5' : '#fff'};
+            border:${isCurrent ? '2px solid #ff8c42' : '1.5px solid rgba(200,160,110,0.35)'};
             border-radius:0.6rem;overflow:hidden;margin:3px 0;
-            box-shadow:0 1px 4px rgba(0,0,0,0.06);
+            box-shadow:${isCurrent ? '0 0 0 3px rgba(255,140,66,0.2), 0 2px 8px rgba(0,0,0,0.1)' : '0 1px 4px rgba(0,0,0,0.06)'};
           `;
+          if (isCurrent) {
+            const badge = document.createElement('div');
+            badge.style.cssText = 'background:#ff8c42;color:#fff;font-family:var(--font-body);font-size:0.65rem;font-weight:800;padding:2px 6px;text-align:center;letter-spacing:0.04em;';
+            badge.textContent = '▶ 현재 경기';
+            matchEl.appendChild(badge);
+          }
 
           const slotsData = ri === 0 ? match.players : new Array(M).fill(null);
           slotsData.forEach((player, si) => {
