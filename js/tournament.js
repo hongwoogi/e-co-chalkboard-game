@@ -41,11 +41,21 @@
   function assignParticipants(bracket, N, M) {
     const nums = shuffle(Array.from({ length: N }, (_, i) => String(i + 1)));
     let idx = 0;
-    for (const match of bracket[0]) {
+    const round0 = bracket[0];
+    const numByes = round0.length * M - N;
+
+    // Place byes at the FRONT matches (one bye per match, last slot of match)
+    // so bye-receivers fall into the FIRST grouping in round 1 → guaranteed opponent
+    round0.forEach((match, mi) => {
+      const hasBye = mi < numByes;
       for (let s = 0; s < M; s++) {
-        match.players[s] = idx < nums.length ? nums[idx++] : null;
+        if (hasBye && s === M - 1) {
+          match.players[s] = null;        // bye in last slot of this match
+        } else {
+          match.players[s] = idx < nums.length ? nums[idx++] : null;
+        }
       }
-    }
+    });
     return nums;
   }
 
@@ -58,9 +68,14 @@
       const connRect = connEl.getBoundingClientRect();
       if (connRect.height === 0) return;
 
-      const curMatches = roundEls[ri].querySelectorAll('.tm-match');
+      const curMatchArr = Array.from(roundEls[ri].querySelectorAll('.tm-match'));
       const nextMatches = roundEls[ri + 1].querySelectorAll('.tm-match');
       const groupSize = Math.ceil(round.length / nextRound.length);
+
+      // Alternating direction: odd transitions use reversed source order
+      // so bye-receivers from even rounds always meet real opponents in odd rounds
+      const useReverse = ri % 2 === 1;
+      const curMatches = useReverse ? [...curMatchArr].reverse() : curMatchArr;
 
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;';
