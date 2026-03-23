@@ -13,14 +13,17 @@
 
 (function registerTimeMaster() {
 
-  /* ── Scoring ─────────────────────────────────────────────── */
+  /* ── Scoring: 1000pts - 10pts per 0.01s of error ──────────── */
   function calcScore(diff) {
-    if (diff <= 0.10) return { pts: 1000, label: '🎯 완벽!',      color: '#4ade80' };
-    if (diff <= 0.30) return { pts: 800,  label: '👏 훌륭해요!',  color: '#4ade80' };
-    if (diff <= 0.60) return { pts: 600,  label: '😊 좋아요!',    color: '#7ed3ff' };
-    if (diff <= 1.00) return { pts: 400,  label: '🙂 괜찮아요',   color: '#fdd34d' };
-    if (diff <= 2.00) return { pts: 200,  label: '😅 아쉬워요',   color: '#fd8863' };
-    return                   { pts: 50,   label: '😔 다시 도전!', color: '#f87171' };
+    const pts = Math.max(0, 1000 - Math.floor(diff * 100) * 10);
+    let label, color;
+    if (pts >= 950) { label = '🎯 완벽!';      color = '#4ade80'; }
+    else if (pts >= 800) { label = '👏 훌륭해요!'; color = '#4ade80'; }
+    else if (pts >= 600) { label = '😊 좋아요!';   color = '#7ed3ff'; }
+    else if (pts >= 400) { label = '🙂 괜찮아요';  color = '#fdd34d'; }
+    else if (pts >= 100) { label = '😅 아쉬워요';  color = '#fd8863'; }
+    else                 { label = '😔 다시 도전!'; color = '#f87171'; }
+    return { pts, label, color };
   }
 
   /* ── Coordinator: syncs target & round start across panels ── */
