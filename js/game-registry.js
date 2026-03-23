@@ -205,6 +205,17 @@ const GAMES = [
     available:   true,
     entryFile:   'quiz-words/game.js',
   },
+  {
+    id:          'drawing-game',
+    name:        '빨리 그리기',
+    icon:        '✏️',
+    description: '제시어를 그리면 AI가 맞혀요! 먼저 맞추면 승리!',
+    color:       '#f59e0b',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'drawing-game/game.js',
+  },
 ];
 
 /**
