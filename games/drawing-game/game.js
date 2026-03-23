@@ -90,6 +90,50 @@
     { ko: '눈사람',     en: 'snowman' },
   ];
 
+  /* ── Quick Draw examples: stroke data for hint canvas ──────── */
+  let _examples = null;
+  function getExamples() {
+    if (_examples) return Promise.resolve(_examples);
+    return fetch('/games/drawing-game/examples.json')
+      .then(r => r.json())
+      .then(d => { _examples = d; return d; })
+      .catch(() => ({}));
+  }
+
+  /* Draw Quick Draw stroke data onto a canvas element */
+  function renderStrokesOnCanvas(strokes, canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!strokes?.length) return;
+
+    /* Find bounding box */
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [xs, ys] of strokes) {
+      for (let i = 0; i < xs.length; i++) {
+        if (xs[i] < x0) x0 = xs[i]; if (xs[i] > x1) x1 = xs[i];
+        if (ys[i] < y0) y0 = ys[i]; if (ys[i] > y1) y1 = ys[i];
+      }
+    }
+    const pw = x1 - x0 || 1, ph = y1 - y0 || 1;
+    const pad = 8;
+    const scale = Math.min((canvas.width - pad * 2) / pw, (canvas.height - pad * 2) / ph);
+    const ox = (canvas.width  - pw * scale) / 2 - x0 * scale;
+    const oy = (canvas.height - ph * scale) / 2 - y0 * scale;
+
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth   = Math.max(2, canvas.width * 0.025);
+    ctx.lineCap = ctx.lineJoin = 'round';
+    for (const [xs, ys] of strokes) {
+      ctx.beginPath();
+      ctx.moveTo(xs[0] * scale + ox, ys[0] * scale + oy);
+      for (let i = 1; i < xs.length; i++) {
+        ctx.lineTo(xs[i] * scale + ox, ys[i] * scale + oy);
+      }
+      ctx.stroke();
+    }
+  }
+
   /* ── DoodleNet via TF.js direct — 28×28 grayscale model ───── */
   let _modelPromise = null;
   let _labels = null;
@@ -527,11 +571,25 @@
         phase = 'countdown';
         stopClassify(); clearCanvas(); resetBar();
         wordEl.innerHTML = `<span style="color:#aaa;font-size:0.75rem;">${round}/${totalRounds} 라운드 &nbsp;·&nbsp; 제시어</span><br>${word.ko}`;
+
+        /* Show word + Quick Draw example hint */
         showOverlay(`
-          <div style="font-size:0.9rem;color:#7ed3ff;margin-bottom:10px;">${round} / ${totalRounds} 라운드</div>
-          <div style="font-size:2.4rem;font-weight:bold;color:#fdd34d;margin-bottom:8px;">${word.ko}</div>
-          <div style="font-size:0.85rem;color:#ccc;">이 단어를 그려요!</div>
+          <div style="font-size:0.85rem;color:#7ed3ff;margin-bottom:6px;">${round} / ${totalRounds} 라운드</div>
+          <div style="font-size:2.2rem;font-weight:bold;color:#fdd34d;margin-bottom:6px;">${word.ko}</div>
+          <canvas id="hint-canvas" width="100" height="100"
+            style="border-radius:10px;background:#fff;margin-bottom:6px;"></canvas>
+          <div style="font-size:0.75rem;color:#888;">이렇게 그려보세요!</div>
         `);
+        /* Render example after DOM is updated */
+        requestAnimationFrame(() => {
+          const hc = overlay.querySelector('#hint-canvas');
+          if (!hc) return;
+          getExamples().then(ex => {
+            const strokes = ex[word.en];
+            if (strokes) renderStrokesOnCanvas(strokes, hc);
+            else { hc.style.display = 'none'; }
+          });
+        });
       },
 
       countdown({ count }) {
