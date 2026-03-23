@@ -106,7 +106,7 @@
         buildClassifier();
       } else {
         const s = document.createElement('script');
-        s.src = 'https://unpkg.com/ml5@0.12.2/dist/ml5.min.js';
+        s.src = 'https://unpkg.com/ml5@0.5.2/dist/ml5.min.js';
         s.onload = buildClassifier;
         s.onerror = () => reject(new Error('ml5 load failed'));
         document.head.appendChild(s);
@@ -398,7 +398,7 @@
       barPct.style.color       = '#888';
     }
 
-    /* ── Canvas preprocessing (crop + center + scale to 280×280) ── */
+    /* ── Canvas preprocessing: crop to drawing, scale to 280×280 ── */
     function getProcessedCanvas() {
       const idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = idata.data;
@@ -406,18 +406,23 @@
       for (let y = 0; y < canvas.height; y++) {
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
-          if (d[i] < 200 || d[i+1] < 200 || d[i+2] < 200) {
+          if (d[i] < 180 || d[i+1] < 180 || d[i+2] < 180) {
             if (x < x0) x0 = x; if (x > x1) x1 = x;
             if (y < y0) y0 = y; if (y > y1) y1 = y;
           }
         }
       }
-      if (x1 <= x0 || y1 <= y0) return canvas; // nothing drawn yet
+      /* Nothing drawn yet — skip classification */
+      if (x1 <= x0 || y1 <= y0 || (x1 - x0) < 5) return null;
 
-      const pad  = Math.max(x1 - x0, y1 - y0) * 0.2;
-      const srcX = Math.max(0, x0 - pad), srcY = Math.max(0, y0 - pad);
-      const srcW = Math.min(canvas.width,  x1 - x0 + pad * 2);
-      const srcH = Math.min(canvas.height, y1 - y0 + pad * 2);
+      const pad  = Math.max(x1 - x0, y1 - y0) * 0.25;
+      const srcX = Math.max(0,              Math.round(x0 - pad));
+      const srcY = Math.max(0,              Math.round(y0 - pad));
+      const srcX2 = Math.min(canvas.width,  Math.round(x1 + pad));
+      const srcY2 = Math.min(canvas.height, Math.round(y1 + pad));
+      const srcW  = srcX2 - srcX;
+      const srcH  = srcY2 - srcY;
+      if (srcW < 5 || srcH < 5) return null;
 
       const size = 280;
       const tmp  = document.createElement('canvas');
@@ -426,8 +431,8 @@
       tc.fillStyle = '#ffffff';
       tc.fillRect(0, 0, size, size);
 
-      const scale = Math.min((size - 10) / srcW, (size - 10) / srcH);
-      const dw    = srcW * scale, dh = srcH * scale;
+      const scale = Math.min((size - 20) / srcW, (size - 20) / srcH);
+      const dw = srcW * scale, dh = srcH * scale;
       tc.drawImage(canvas, srcX, srcY, srcW, srcH,
         (size - dw) / 2, (size - dh) / 2, dw, dh);
       return tmp;
