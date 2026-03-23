@@ -6,24 +6,27 @@
 (function () {
   const KEY = 'lb_v1';
 
-  const GAME_NAMES = {
-    'number-pop':   '숫자 팡팡',
-    'color-match':  '색깔 맞추기',
-    'math-race':    '수학 레이스',
-    'word-quiz':    '낱말 퀴즈',
-    'memory-flip':  '기억 카드',
-    'rhythm-tap':   '리듬 탭',
-    'tetris':       '테트리스',
-    'number-hunt':  '숫자 찾기',
-    'minesweeper':  '지뢰찾기',
-    'breakout':     '블록 깨기',
-    'snake':        '뱀 게임',
-    'number-bomb':  '숫자 폭탄',
-    'times-quiz':   '구구단 배틀',
-    'number-slide': '넘버 슬라이드',
-    'quiz-flags':   '국기 퀴즈',
-    'quiz-words':   '영어 단어',
-  };
+  /* Build from window.GAMES at call time so new games are always included */
+  function getGameNames() {
+    if (window.GAMES?.length) {
+      const map = {};
+      window.GAMES.forEach(g => { map[g.id] = g.name; });
+      return map;
+    }
+    /* Fallback if registry not yet loaded */
+    return {
+      'number-pop':   '숫자 팡팡',   'color-match':  '색깔 맞추기',
+      'math-race':    '수학 레이스',  'word-quiz':    '낱말 퀴즈',
+      'memory-flip':  '기억 카드',    'rhythm-tap':   '리듬 탭',
+      'tetris':       '테트리스',     'number-hunt':  '숫자 찾기',
+      'minesweeper':  '지뢰찾기',     'breakout':     '블록 깨기',
+      'snake':        '뱀 게임',      'number-bomb':  '숫자 폭탄',
+      'times-quiz':   '구구단 배틀',  'number-slide': '넘버 슬라이드',
+      'quiz-flags':   '국기 퀴즈',    'quiz-words':   '영어 단어',
+      'drawing-game': '빨리 그리기',  'time-master':  '시간 지배자',
+      'reaction-speed': '반응속도',   'perfect-circle': '완벽한 원',
+    };
+  }
 
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
@@ -55,9 +58,11 @@
       return Object.values(d).some(arr => arr.length > 0);
     },
 
+    get GAME_NAMES() { return getGameNames(); },
+
     allGames() {
       const d = load();
-      return Object.keys(GAME_NAMES).filter(g => d[g]?.length);
+      return Object.keys(getGameNames()).filter(g => d[g]?.length);
     }
   };
 
