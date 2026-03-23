@@ -34,8 +34,6 @@
   function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
 
   const LB = {
-    GAME_NAMES,
-
     add(game, name, score) {
       if (!game || score == null || isNaN(score)) return;
       const d = load();
