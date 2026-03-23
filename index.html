@@ -1655,14 +1655,20 @@
 
       function openLeaderboard(preferGame) {
         const NAMES = window.Leaderboard?.GAME_NAMES || {};
-        const gameIds = Object.keys(NAMES);
-        _lbCurrentGame = (preferGame && NAMES[preferGame]) ? preferGame : gameIds[0];
+        /* Only show games that have saved data; if preferGame has data, include it too */
+        const withData = new Set(window.Leaderboard?.allGames() || []);
+        if (preferGame) withData.add(preferGame);
+        /* Preserve registry order */
+        const gameIds = Object.keys(NAMES).filter(id => withData.has(id));
+        _lbCurrentGame = (preferGame && gameIds.includes(preferGame)) ? preferGame : gameIds[0] || '';
 
         // Build sidebar game buttons
         const gameList = document.getElementById('lb-game-list');
-        gameList.innerHTML = gameIds.map(id =>
-          `<button class="lb-game-btn${id === _lbCurrentGame ? ' active' : ''}" data-game="${id}">${NAMES[id]}</button>`
-        ).join('');
+        gameList.innerHTML = gameIds.length
+          ? gameIds.map(id =>
+              `<button class="lb-game-btn${id === _lbCurrentGame ? ' active' : ''}" data-game="${id}">${NAMES[id]}</button>`
+            ).join('')
+          : '<div style="padding:12px;color:#888;font-size:0.85rem;">아직 기록이 없어요</div>';
 
         renderLbList();
         document.getElementById('lb-modal').classList.add('open');
