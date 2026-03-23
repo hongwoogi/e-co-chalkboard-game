@@ -106,7 +106,7 @@
         buildClassifier();
       } else {
         const s = document.createElement('script');
-        s.src = 'https://unpkg.com/ml5@0.5.2/dist/ml5.min.js';
+        s.src = '/js/ml5.min.js';
         s.onload = buildClassifier;
         s.onerror = () => reject(new Error('ml5 load failed'));
         document.head.appendChild(s);
