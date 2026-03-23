@@ -17,6 +17,28 @@
 
 const GAMES = [
   {
+    id:          'reaction-speed',
+    name:        '반응속도',
+    icon:        '⚡',
+    description: '초록불이 켜지는 순간 탭! 반응속도를 측정해요!',
+    color:       '#4ade80',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'reaction-speed/game.js',
+  },
+  {
+    id:          'perfect-circle',
+    name:        '완벽한 원',
+    icon:        '⭕',
+    description: '손가락으로 완벽한 원을 그려봐요! 원형도로 점수 계산!',
+    color:       '#7ed3ff',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'perfect-circle/game.js',
+  },
+  {
     id:          'drawing-game',
     name:        '빨리 그리기',
     icon:        '✏️',
