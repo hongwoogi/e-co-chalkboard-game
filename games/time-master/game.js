@@ -15,7 +15,7 @@
 
   /* ── Scoring: 1000pts - 10pts per 0.01s of error ──────────── */
   function calcScore(diff) {
-    const pts = Math.max(0, 1000 - Math.floor(diff * 100) * 10);
+    const pts = Math.max(0, 1000 - Math.floor(diff * 20) * 10);
     let label, color;
     if (pts >= 950) { label = '🎯 완벽!';      color = '#4ade80'; }
     else if (pts >= 800) { label = '👏 훌륭해요!'; color = '#4ade80'; }
