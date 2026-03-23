@@ -189,7 +189,7 @@
       },
 
       classify(canvas, cb) {
-        if (!classifier) return;
+        if (!classifier || !canvas) return;
         try { classifier.classify(canvas, cb); } catch (e) {}
       },
 
@@ -303,15 +303,29 @@
       const w = Math.max(1, Math.round(r.width));
       const h = Math.max(1, Math.round(r.height));
       if (canvas.width === w && canvas.height === h) return;
+
+      /* Preserve existing drawing across resize */
+      const prev = document.createElement('canvas');
+      prev.width = canvas.width; prev.height = canvas.height;
+      prev.getContext('2d').drawImage(canvas, 0, 0);
+
       canvas.width = w; canvas.height = h;
-      clearCanvas();
+      ctx.fillStyle = '#f7f3ea';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#1a1a2e';
+      ctx.lineWidth   = Math.max(4, w * 0.018);
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+      if (prev.width > 1 && prev.height > 1) {
+        ctx.drawImage(prev, 0, 0, prev.width, prev.height, 0, 0, w, h);
+      }
     }
 
     function clearCanvas() {
       ctx.fillStyle = '#f7f3ea';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = '#1a1a2e';
-      ctx.lineWidth   = Math.max(3, canvas.width * 0.013);
+      ctx.lineWidth   = Math.max(4, canvas.width * 0.018);
       ctx.lineCap     = 'round';
       ctx.lineJoin    = 'round';
     }
@@ -433,8 +447,18 @@
 
       const scale = Math.min((size - 20) / srcW, (size - 20) / srcH);
       const dw = srcW * scale, dh = srcH * scale;
-      tc.drawImage(canvas, srcX, srcY, srcW, srcH,
-        (size - dw) / 2, (size - dh) / 2, dw, dh);
+      const dx = (size - dw) / 2, dy = (size - dh) / 2;
+      tc.drawImage(canvas, srcX, srcY, srcW, srcH, dx, dy, dw, dh);
+
+      /* Convert to pure black strokes on white — matches Quick Draw training format */
+      const id = tc.getImageData(0, 0, size, size);
+      const pd = id.data;
+      for (let i = 0; i < pd.length; i += 4) {
+        const bright = (pd[i] + pd[i+1] + pd[i+2]) / 3;
+        const val = bright < 200 ? 0 : 255;
+        pd[i] = pd[i+1] = pd[i+2] = val; pd[i+3] = 255;
+      }
+      tc.putImageData(id, 0, 0);
       return tmp;
     }
 
@@ -452,7 +476,7 @@
 
           // Win condition: target in top-5 with sufficient confidence
           const match = results.slice(0, 5).find(
-            r => r.label.toLowerCase() === word.en.toLowerCase() && r.confidence >= 0.28
+            r => r.label.toLowerCase() === word.en.toLowerCase() && r.confidence >= 0.18
           );
           if (match) coord.reportCorrect(playerIndex);
         });
