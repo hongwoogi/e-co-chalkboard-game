@@ -1343,6 +1343,16 @@
         }
       });
 
+      // Reorder game cards in the DOM to match GAMES array order
+      (function reorderGameCards() {
+        const grid = document.getElementById('game-grid');
+        if (!grid || !window.GAMES) return;
+        window.GAMES.forEach(g => {
+          const card = grid.querySelector(`.game-card[data-game="${g.id}"]`);
+          if (card) grid.appendChild(card);
+        });
+      })();
+
       /* ── Player chips (synced desktop + mobile) ── */
       function onPlayerChange(chip) {
         selectedCount = parseInt(chip.dataset.count);
