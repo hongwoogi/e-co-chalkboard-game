@@ -359,6 +359,25 @@
     });
     canvasWrap.appendChild(overlay);
 
+    /* AI preview: shows the 28×28 image the model actually sees (scaled up) */
+    const aiPreviewWrap = el('div', {
+      style: `flex-shrink:0;padding:4px 12px 2px;background:#16213e;
+              border-top:1px solid rgba(126,211,255,0.08);
+              display:flex;align-items:center;gap:8px;`,
+    });
+    const aiPreviewLabel = el('span', {
+      style: `font-size:0.65rem;color:#555;white-space:nowrap;`,
+      text: 'AI가 보는 화면:',
+    });
+    const aiPreviewCanvas = document.createElement('canvas');
+    aiPreviewCanvas.width  = 28;
+    aiPreviewCanvas.height = 28;
+    aiPreviewCanvas.style.cssText = `
+      width:56px;height:56px;border:1px solid #333;border-radius:3px;
+      image-rendering:pixelated;background:#000;
+    `;
+    aiPreviewWrap.append(aiPreviewLabel, aiPreviewCanvas);
+
     /* Bottom bar */
     const botBar = el('div', {
       style: `flex-shrink:0;padding:5px 12px;display:flex;align-items:center;
@@ -375,7 +394,7 @@
       text: '점수: 0',
     });
     botBar.append(clearBtn, scoreEl);
-    container.append(topBar, canvasWrap, botBar);
+    container.append(topBar, canvasWrap, aiPreviewWrap, botBar);
 
     /* ── Canvas drawing ───────────────────────────────────── */
     const ctx = canvas.getContext('2d');
@@ -540,7 +559,25 @@
         const word = coord.getCurrentWord();
         if (!word) return;
 
-        coord.classify(getProcessedCanvas(), (err, results) => {
+        const processed = getProcessedCanvas();
+        /* Update AI preview: show exact binary image the model receives */
+        if (processed) {
+          const tmp = document.createElement('canvas');
+          tmp.width = 28; tmp.height = 28;
+          const tc = tmp.getContext('2d');
+          tc.fillStyle = '#fff'; tc.fillRect(0,0,28,28);
+          tc.drawImage(processed, 0, 0, 28, 28);
+          const id = tc.getImageData(0,0,28,28);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const bright = (d[i]+d[i+1]+d[i+2])/3;
+            const v = bright < 200 ? 0 : 255; // stroke=black, bg=white (human-readable)
+            d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
+          }
+          tc.putImageData(id, 0, 0);
+          aiPreviewCanvas.getContext('2d').drawImage(tmp, 0, 0);
+        }
+        coord.classify(processed, (err, results) => {
           if (err) { console.error('[DoodleNet]', err); return; }
           if (dead || phase !== 'drawing' || !results?.length) return;
           console.log('[DoodleNet top3]', results.slice(0,3).map(r=>r.label+'='+(r.confidence*100).toFixed(1)+'%').join(', '));
