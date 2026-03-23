@@ -1429,10 +1429,16 @@
           cdOverlay.classList.remove('open');
           const launchGame = window.getGameById(selectedGame);
           if (launchGame?.isQuiz) {
-            LayoutManager.launchQuiz(selectedCount, selectedGame);
+            LayoutManager.launchQuiz(effectiveCount, selectedGame);
           } else {
-            LayoutManager.build(selectedCount, variant);
-            for (let i = 0; i < selectedCount; i++) LayoutManager.loadGameInPanel(i, selectedGame);
+            LayoutManager.build(effectiveCount, variant);
+            for (let i = 0; i < effectiveCount; i++) LayoutManager.loadGameInPanel(i, selectedGame);
+          }
+          // Show tournament player numbers on panel badges
+          if (tmInfo && tmInfo.players.length > 0) {
+            document.querySelectorAll('.panel-player-badge').forEach((badge, i) => {
+              if (tmInfo.players[i]) badge.textContent = `${tmInfo.players[i]}번`;
+            });
           }
           document.getElementById('screen-home').style.display = 'none';
           document.getElementById('btn-back-home').style.display = 'block';
