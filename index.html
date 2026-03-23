@@ -1539,18 +1539,8 @@
       });
       window.TournamentManager?.init();
 
-      /* ── Category filter ── */
-      document.getElementById('category-chips').addEventListener('click', e => {
-        const btn = e.target.closest('[data-cat]');
-        if (!btn) return;
-        document.querySelectorAll('#category-chips [data-cat]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const cat = btn.dataset.cat;
-        document.querySelectorAll('.game-card').forEach(card => {
-          const show = cat === '전체' || card.dataset.category === cat;
-          card.style.display = show ? '' : 'none';
-        });
-      });
+      /* ── Category filter (disabled — re-enable when more games added) ── */
+      // document.getElementById('category-chips')?.addEventListener('click', e => { ... });
 
       /* ── Fullscreen ── */
       document.getElementById('btn-fullscreen').addEventListener('click', () => {
