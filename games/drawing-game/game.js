@@ -166,22 +166,51 @@
   /* Classify a canvas element; returns [{label, confidence}] sorted desc */
   function classifyCanvas(model, canvas) {
     return window.tf.tidy(() => {
-      /* Resize to 28×28 via offscreen canvas */
+      /* Step 1: draw to 56×56 first (better downscale quality) */
+      const mid = document.createElement('canvas');
+      mid.width = 56; mid.height = 56;
+      const mc = mid.getContext('2d');
+      mc.fillStyle = '#ffffff';
+      mc.fillRect(0, 0, 56, 56);
+      mc.drawImage(canvas, 0, 0, 56, 56);
+
+      /* Step 2: threshold at 56×56 then dilate strokes */
+      const mid56 = mc.getImageData(0, 0, 56, 56);
+      const m = mid56.data;
+      const bin56 = new Uint8Array(56 * 56);
+      for (let i = 0; i < 56 * 56; i++) {
+        bin56[i] = (m[i*4]+m[i*4+1]+m[i*4+2])/3 < 200 ? 1 : 0;
+      }
+      /* Dilate: spread each stroke pixel to neighbors (thickens thin lines) */
+      const dil = new Uint8Array(56 * 56);
+      for (let y = 0; y < 56; y++) for (let x = 0; x < 56; x++) {
+        if (bin56[y*56+x]) {
+          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            const ny = y+dy, nx = x+dx;
+            if (ny>=0 && ny<56 && nx>=0 && nx<56) dil[ny*56+nx] = 1;
+          }
+        }
+      }
+      /* Write dilated back to canvas */
+      for (let i = 0; i < 56 * 56; i++) {
+        const v = dil[i] ? 0 : 255;
+        m[i*4] = m[i*4+1] = m[i*4+2] = v; m[i*4+3] = 255;
+      }
+      mc.putImageData(mid56, 0, 0);
+
+      /* Step 3: scale 56→28 */
       const small = document.createElement('canvas');
       small.width = 28; small.height = 28;
       const sc = small.getContext('2d');
-      sc.fillStyle = '#ffffff';
-      sc.fillRect(0, 0, 28, 28);
-      sc.drawImage(canvas, 0, 0, 28, 28);
+      sc.drawImage(mid, 0, 0, 28, 28);
 
-      /* Build tensor: grayscale binary, invert (bg→0, stroke→1), shape [1,28,28,1] */
+      /* Step 4: final threshold + invert (stroke→1, bg→0) */
       const imgData = sc.getImageData(0, 0, 28, 28);
-      const raw = imgData.data; // RGBA
+      const raw = imgData.data;
       const gray = new Float32Array(28 * 28);
       for (let i = 0; i < 28 * 28; i++) {
-        const r = raw[i * 4], g = raw[i * 4 + 1], b = raw[i * 4 + 2];
-        const bright = (r + g + b) / 3;
-        gray[i] = bright < 200 ? 1.0 : 0.0; // binary: dark stroke→1, light bg→0
+        const bright = (raw[i*4]+raw[i*4+1]+raw[i*4+2])/3;
+        gray[i] = bright < 200 ? 1.0 : 0.0;
       }
 
       const tensor = window.tf.tensor4d(gray, [1, 28, 28, 1]);
@@ -366,7 +395,7 @@
               display:flex;align-items:center;gap:8px;`,
     });
     const aiPreviewLabel = el('span', {
-      style: `font-size:0.65rem;color:#555;white-space:nowrap;`,
+      style: `font-size:0.6rem;color:#666;flex:1;overflow:hidden;`,
       text: 'AI가 보는 화면:',
     });
     const aiPreviewCanvas = document.createElement('canvas');
@@ -560,28 +589,31 @@
         if (!word) return;
 
         const processed = getProcessedCanvas();
-        /* Update AI preview: show exact binary image the model receives */
-        if (processed) {
-          const tmp = document.createElement('canvas');
-          tmp.width = 28; tmp.height = 28;
-          const tc = tmp.getContext('2d');
-          tc.fillStyle = '#fff'; tc.fillRect(0,0,28,28);
-          tc.drawImage(processed, 0, 0, 28, 28);
-          const id = tc.getImageData(0,0,28,28);
-          const d = id.data;
-          for (let i = 0; i < d.length; i += 4) {
-            const bright = (d[i]+d[i+1]+d[i+2])/3;
-            const v = bright < 200 ? 0 : 255; // stroke=black, bg=white (human-readable)
-            d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
-          }
-          tc.putImageData(id, 0, 0);
-          aiPreviewCanvas.getContext('2d').drawImage(tmp, 0, 0);
-        }
         coord.classify(processed, (err, results) => {
           if (err) { console.error('[DoodleNet]', err); return; }
           if (dead || phase !== 'drawing' || !results?.length) return;
-          console.log('[DoodleNet top3]', results.slice(0,3).map(r=>r.label+'='+(r.confidence*100).toFixed(1)+'%').join(', '));
+
+          /* Update AI preview with dilated 28×28 result */
+          if (processed) {
+            const mid = document.createElement('canvas');
+            mid.width = 56; mid.height = 56;
+            const mc = mid.getContext('2d');
+            mc.fillStyle='#fff'; mc.fillRect(0,0,56,56);
+            mc.drawImage(processed, 0, 0, 56, 56);
+            const id56 = mc.getImageData(0,0,56,56), d56 = id56.data;
+            const bin = new Uint8Array(56*56);
+            for (let i=0;i<56*56;i++) bin[i]=(d56[i*4]+d56[i*4+1]+d56[i*4+2])/3<200?1:0;
+            const dil = new Uint8Array(56*56);
+            for (let y=0;y<56;y++) for (let x=0;x<56;x++) if(bin[y*56+x])
+              for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){const ny=y+dy,nx=x+dx;if(ny>=0&&ny<56&&nx>=0&&nx<56)dil[ny*56+nx]=1;}
+            for (let i=0;i<56*56;i++){const v=dil[i]?0:255;d56[i*4]=d56[i*4+1]=d56[i*4+2]=v;d56[i*4+3]=255;}
+            mc.putImageData(id56, 0, 0);
+            aiPreviewCanvas.getContext('2d').drawImage(mid, 0, 0, 28, 28);
+          }
+
           updateBar(results, word);
+          /* Show top-3 in preview label */
+          aiPreviewLabel.textContent = results.slice(0,3).map(r=>r.label.replace('_',' ')+'='+(r.confidence*100|0)+'%').join(' | ');
 
           // Win condition: target in top-5 with sufficient confidence
           const match = results.slice(0, 5).find(
