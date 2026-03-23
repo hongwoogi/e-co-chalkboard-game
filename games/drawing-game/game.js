@@ -163,57 +163,61 @@
     return _modelPromise;
   }
 
-  /* Classify a canvas element; returns [{label, confidence}] sorted desc */
-  function classifyCanvas(model, canvas) {
+  /**
+   * Render stroke coordinate arrays to 28×28 exactly as Quick Draw training data.
+   * strokes = [[xs, ys], [xs, ys], ...] — coordinate values in canvas-pixel space.
+   * Returns [{label, confidence}] sorted descending.
+   */
+  function classifyStrokes(model, strokes) {
     return window.tf.tidy(() => {
-      /* Step 1: draw to 56×56 first (better downscale quality) */
-      const mid = document.createElement('canvas');
-      mid.width = 56; mid.height = 56;
-      const mc = mid.getContext('2d');
-      mc.fillStyle = '#ffffff';
-      mc.fillRect(0, 0, 56, 56);
-      mc.drawImage(canvas, 0, 0, 56, 56);
+      if (!strokes || strokes.length === 0) return null;
 
-      /* Step 2: threshold at 56×56 then dilate strokes */
-      const mid56 = mc.getImageData(0, 0, 56, 56);
-      const m = mid56.data;
-      const bin56 = new Uint8Array(56 * 56);
-      for (let i = 0; i < 56 * 56; i++) {
-        bin56[i] = (m[i*4]+m[i*4+1]+m[i*4+2])/3 < 200 ? 1 : 0;
-      }
-      /* Dilate: spread each stroke pixel to neighbors (thickens thin lines) */
-      const dil = new Uint8Array(56 * 56);
-      for (let y = 0; y < 56; y++) for (let x = 0; x < 56; x++) {
-        if (bin56[y*56+x]) {
-          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-            const ny = y+dy, nx = x+dx;
-            if (ny>=0 && ny<56 && nx>=0 && nx<56) dil[ny*56+nx] = 1;
-          }
+      /* Find bounding box */
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const [xs, ys] of strokes) {
+        for (let i = 0; i < xs.length; i++) {
+          if (xs[i] < x0) x0 = xs[i]; if (xs[i] > x1) x1 = xs[i];
+          if (ys[i] < y0) y0 = ys[i]; if (ys[i] > y1) y1 = ys[i];
         }
       }
-      /* Write dilated back to canvas */
-      for (let i = 0; i < 56 * 56; i++) {
-        const v = dil[i] ? 0 : 255;
-        m[i*4] = m[i*4+1] = m[i*4+2] = v; m[i*4+3] = 255;
+      const pad = 16;
+      const maxDim = Math.max(x1 - x0, y1 - y0) + pad * 2;
+      if (maxDim <= 0) return null;
+
+      const side   = 28;
+      const scale  = side / maxDim;
+      const swPx   = scale * pad * 0.85; // stroke width matching Quick Draw (~line_diameter/padding ratio)
+      const ox     = -x0 * scale + pad * scale;
+      const oy     = -y0 * scale + pad * scale;
+
+      /* Render to 28×28 with white strokes on black (Quick Draw training format) */
+      const tmp = document.createElement('canvas');
+      tmp.width = side; tmp.height = side;
+      const tc = tmp.getContext('2d');
+      tc.fillStyle = '#000000';
+      tc.fillRect(0, 0, side, side);
+      tc.strokeStyle = '#ffffff';
+      tc.lineWidth = Math.max(1, swPx);
+      tc.lineCap = tc.lineJoin = 'round';
+
+      for (const [xs, ys] of strokes) {
+        tc.beginPath();
+        tc.moveTo(xs[0] * scale + ox, ys[0] * scale + oy);
+        for (let i = 1; i < xs.length; i++) {
+          tc.lineTo(xs[i] * scale + ox, ys[i] * scale + oy);
+        }
+        tc.stroke();
       }
-      mc.putImageData(mid56, 0, 0);
 
-      /* Step 3: scale 56→28 */
-      const small = document.createElement('canvas');
-      small.width = 28; small.height = 28;
-      const sc = small.getContext('2d');
-      sc.drawImage(mid, 0, 0, 28, 28);
-
-      /* Step 4: final threshold + invert (stroke→1, bg→0) */
-      const imgData = sc.getImageData(0, 0, 28, 28);
+      /* Extract grayscale, normalize to [0,1] */
+      const imgData = tc.getImageData(0, 0, side, side);
       const raw = imgData.data;
-      const gray = new Float32Array(28 * 28);
-      for (let i = 0; i < 28 * 28; i++) {
-        const bright = (raw[i*4]+raw[i*4+1]+raw[i*4+2])/3;
-        gray[i] = bright < 200 ? 1.0 : 0.0;
+      const gray = new Float32Array(side * side);
+      for (let i = 0; i < side * side; i++) {
+        gray[i] = (raw[i*4] + raw[i*4+1] + raw[i*4+2]) / 3 / 255;
       }
 
-      const tensor = window.tf.tensor4d(gray, [1, 28, 28, 1]);
+      const tensor = window.tf.tensor4d(gray, [1, side, side, 1]);
       const preds  = model.predict(tensor);
       const scores = preds.dataSync();
 
@@ -296,11 +300,11 @@
         setTimeout(startRound, 3500);
       },
 
-      classify(canvas, cb) {
-        if (!model || !canvas) return;
+      classify(strokes, cb) {
+        if (!model || !strokes?.length) return;
         try {
-          const results = classifyCanvas(model, canvas);
-          cb(null, results);
+          const results = classifyStrokes(model, strokes);
+          if (results) cb(null, results);
         } catch (e) { cb(e, null); }
       },
 
@@ -327,6 +331,7 @@
 
     /* ── State ─────────────────────────────────────────────── */
     let myScore = 0, isDrawing = false, lastX = 0, lastY = 0;
+    let strokes = [], currentStroke = null; // stroke coordinate recording
     let classifyIv = null, dead = false;
     let phase = 'loading';
 
@@ -452,6 +457,7 @@
     }
 
     function clearCanvas() {
+      strokes = []; currentStroke = null;
       ctx.fillStyle = '#f7f3ea';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = '#1a1a2e';
@@ -472,6 +478,7 @@
       if (phase !== 'drawing') return;
       e.preventDefault(); isDrawing = true;
       ({ x: lastX, y: lastY } = getPos(e));
+      currentStroke = [[lastX], [lastY]];
     }
     function onMove(e) {
       if (!isDrawing || phase !== 'drawing') return;
@@ -479,8 +486,13 @@
       const { x, y } = getPos(e);
       ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke();
       lastX = x; lastY = y;
+      if (currentStroke) { currentStroke[0].push(x); currentStroke[1].push(y); }
     }
-    function onUp() { isDrawing = false; }
+    function onUp() {
+      isDrawing = false;
+      if (currentStroke && currentStroke[0].length > 1) { strokes.push(currentStroke); }
+      currentStroke = null;
+    }
 
     canvas.addEventListener('mousedown',  onDown);
     canvas.addEventListener('mousemove',  onMove);
@@ -588,36 +600,34 @@
         const word = coord.getCurrentWord();
         if (!word) return;
 
-        const processed = getProcessedCanvas();
-        coord.classify(processed, (err, results) => {
+        if (!strokes.length) return;
+        /* Update AI preview from stroke data */
+        if (strokes.length) {
+          const tmp = document.createElement('canvas');
+          tmp.width = 28; tmp.height = 28;
+          const tc = tmp.getContext('2d');
+          tc.fillStyle = '#000'; tc.fillRect(0,0,28,28);
+          let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+          for (const [xs,ys] of strokes) for (let i=0;i<xs.length;i++){
+            if(xs[i]<x0)x0=xs[i];if(xs[i]>x1)x1=xs[i];
+            if(ys[i]<y0)y0=ys[i];if(ys[i]>y1)y1=ys[i];}
+          const pad=16, maxD=Math.max(x1-x0,y1-y0)+pad*2, sc28=28/maxD;
+          const ox=-x0*sc28+pad*sc28, oy=-y0*sc28+pad*sc28;
+          tc.strokeStyle='#fff'; tc.lineWidth=Math.max(1,sc28*pad*0.85);
+          tc.lineCap=tc.lineJoin='round';
+          for (const [xs,ys] of strokes){tc.beginPath();tc.moveTo(xs[0]*sc28+ox,ys[0]*sc28+oy);for(let i=1;i<xs.length;i++)tc.lineTo(xs[i]*sc28+ox,ys[i]*sc28+oy);tc.stroke();}
+          aiPreviewCanvas.getContext('2d').drawImage(tmp, 0, 0);
+        }
+
+        coord.classify(strokes, (err, results) => {
           if (err) { console.error('[DoodleNet]', err); return; }
           if (dead || phase !== 'drawing' || !results?.length) return;
 
-          /* Update AI preview with dilated 28×28 result */
-          if (processed) {
-            const mid = document.createElement('canvas');
-            mid.width = 56; mid.height = 56;
-            const mc = mid.getContext('2d');
-            mc.fillStyle='#fff'; mc.fillRect(0,0,56,56);
-            mc.drawImage(processed, 0, 0, 56, 56);
-            const id56 = mc.getImageData(0,0,56,56), d56 = id56.data;
-            const bin = new Uint8Array(56*56);
-            for (let i=0;i<56*56;i++) bin[i]=(d56[i*4]+d56[i*4+1]+d56[i*4+2])/3<200?1:0;
-            const dil = new Uint8Array(56*56);
-            for (let y=0;y<56;y++) for (let x=0;x<56;x++) if(bin[y*56+x])
-              for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){const ny=y+dy,nx=x+dx;if(ny>=0&&ny<56&&nx>=0&&nx<56)dil[ny*56+nx]=1;}
-            for (let i=0;i<56*56;i++){const v=dil[i]?0:255;d56[i*4]=d56[i*4+1]=d56[i*4+2]=v;d56[i*4+3]=255;}
-            mc.putImageData(id56, 0, 0);
-            aiPreviewCanvas.getContext('2d').drawImage(mid, 0, 0, 28, 28);
-          }
-
           updateBar(results, word);
-          /* Show top-3 in preview label */
-          aiPreviewLabel.textContent = results.slice(0,3).map(r=>r.label.replace('_',' ')+'='+(r.confidence*100|0)+'%').join(' | ');
+          aiPreviewLabel.textContent = results.slice(0,3).map(r=>r.label.replace(/_/g,' ')+'='+(r.confidence*100|0)+'%').join(' | ');
 
-          // Win condition: target in top-5 with sufficient confidence
           const match = results.slice(0, 5).find(
-            r => r.label.toLowerCase() === word.en.toLowerCase() && r.confidence >= 0.18
+            r => r.label.toLowerCase() === word.en.toLowerCase() && r.confidence >= 0.15
           );
           if (match) coord.reportCorrect(playerIndex);
         });
