@@ -398,6 +398,41 @@
       barPct.style.color       = '#888';
     }
 
+    /* ── Canvas preprocessing (crop + center + scale to 280×280) ── */
+    function getProcessedCanvas() {
+      const idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = idata.data;
+      let x0 = canvas.width, y0 = canvas.height, x1 = 0, y1 = 0;
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const i = (y * canvas.width + x) * 4;
+          if (d[i] < 200 || d[i+1] < 200 || d[i+2] < 200) {
+            if (x < x0) x0 = x; if (x > x1) x1 = x;
+            if (y < y0) y0 = y; if (y > y1) y1 = y;
+          }
+        }
+      }
+      if (x1 <= x0 || y1 <= y0) return canvas; // nothing drawn yet
+
+      const pad  = Math.max(x1 - x0, y1 - y0) * 0.2;
+      const srcX = Math.max(0, x0 - pad), srcY = Math.max(0, y0 - pad);
+      const srcW = Math.min(canvas.width,  x1 - x0 + pad * 2);
+      const srcH = Math.min(canvas.height, y1 - y0 + pad * 2);
+
+      const size = 280;
+      const tmp  = document.createElement('canvas');
+      tmp.width  = size; tmp.height = size;
+      const tc   = tmp.getContext('2d');
+      tc.fillStyle = '#ffffff';
+      tc.fillRect(0, 0, size, size);
+
+      const scale = Math.min((size - 10) / srcW, (size - 10) / srcH);
+      const dw    = srcW * scale, dh = srcH * scale;
+      tc.drawImage(canvas, srcX, srcY, srcW, srcH,
+        (size - dw) / 2, (size - dh) / 2, dw, dh);
+      return tmp;
+    }
+
     /* ── AI classification loop ───────────────────────────── */
     function startClassify() {
       stopClassify();
@@ -406,7 +441,7 @@
         const word = coord.getCurrentWord();
         if (!word) return;
 
-        coord.classify(canvas, (err, results) => {
+        coord.classify(getProcessedCanvas(), (err, results) => {
           if (dead || phase !== 'drawing' || !results?.length) return;
           updateBar(results, word);
 
@@ -529,5 +564,8 @@
   /* ── Register ───────────────────────────────────────────── */
   window.GameModules = window.GameModules || {};
   window.GameModules['drawing-game'] = { init };
+
+  /* Auto-preload model as soon as this script is loaded */
+  getClassifier().catch(() => {});
 
 })();

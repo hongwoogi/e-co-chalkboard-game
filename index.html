@@ -1381,6 +1381,12 @@
           document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
           card.classList.add('selected');
           selectedGame = card.dataset.game;
+          /* Eagerly load drawing-game script (and its model) when card is selected */
+          if (selectedGame === 'drawing-game' && !window.GameModules?.['drawing-game']) {
+            const _s = document.createElement('script');
+            _s.src = 'games/drawing-game/game.js?v=20260323';
+            document.head.appendChild(_s);
+          }
           const g = window.getGameById(card.dataset.game);
           if (g?.difficulties) {
             const alreadySet = window._gameSettings?.difficulties?.[g.id];
