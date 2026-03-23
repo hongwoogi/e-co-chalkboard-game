@@ -90,29 +90,63 @@
     { ko: '눈사람',     en: 'snowman' },
   ];
 
-  /* ── ml5 / DoodleNet: loaded once, shared ─────────────────── */
-  let _classifierPromise = null;
+  /* ── DoodleNet via TF.js direct — 28×28 grayscale model ───── */
+  let _modelPromise = null;
+  let _labels = null;
 
-  function getClassifier() {
-    if (_classifierPromise) return _classifierPromise;
-    _classifierPromise = new Promise((resolve, reject) => {
-      function buildClassifier() {
-        const clf = window.ml5.imageClassifier('DoodleNet', (err) => {
-          if (err) { reject(err); return; }
-          resolve(clf);
-        });
+  function getModel() {
+    if (_modelPromise) return _modelPromise;
+    _modelPromise = new Promise((resolve, reject) => {
+      function loadModel() {
+        Promise.all([
+          window.tf.loadLayersModel('/models/doodlenet/model.json'),
+          fetch('/models/doodlenet/labels.json').then(r => r.json()),
+        ]).then(([model, labels]) => {
+          _labels = labels;
+          resolve(model);
+        }).catch(reject);
       }
-      if (window.ml5) {
-        buildClassifier();
+      if (window.tf) {
+        loadModel();
       } else {
         const s = document.createElement('script');
-        s.src = '/js/ml5.min.js';
-        s.onload = buildClassifier;
-        s.onerror = () => reject(new Error('ml5 load failed'));
+        s.src = '/js/tf.min.js';
+        s.onload = loadModel;
+        s.onerror = () => reject(new Error('TF.js load failed'));
         document.head.appendChild(s);
       }
     });
-    return _classifierPromise;
+    return _modelPromise;
+  }
+
+  /* Classify a canvas element; returns [{label, confidence}] sorted desc */
+  function classifyCanvas(model, canvas) {
+    return window.tf.tidy(() => {
+      /* Resize to 28×28 via offscreen canvas */
+      const small = document.createElement('canvas');
+      small.width = 28; small.height = 28;
+      const sc = small.getContext('2d');
+      sc.fillStyle = '#ffffff';
+      sc.fillRect(0, 0, 28, 28);
+      sc.drawImage(canvas, 0, 0, 28, 28);
+
+      /* Build tensor: grayscale, invert (bg→0, stroke→1), shape [1,28,28,1] */
+      const imgData = sc.getImageData(0, 0, 28, 28);
+      const raw = imgData.data; // RGBA
+      const gray = new Float32Array(28 * 28);
+      for (let i = 0; i < 28 * 28; i++) {
+        const r = raw[i * 4], g = raw[i * 4 + 1], b = raw[i * 4 + 2];
+        gray[i] = 1 - (r + g + b) / 3 / 255; // invert: white bg→0, dark strokes→~1
+      }
+
+      const tensor = window.tf.tensor4d(gray, [1, 28, 28, 1]);
+      const preds  = model.predict(tensor);
+      const scores = preds.dataSync();
+
+      return Array.from(scores)
+        .map((confidence, i) => ({ label: _labels[i] || String(i), confidence }))
+        .sort((a, b) => b.confidence - a.confidence);
+    });
   }
 
   /* ── Coordinator: shared round state across all panels ──────── */
@@ -120,7 +154,7 @@
     const TOTAL_ROUNDS  = Math.max(3, Math.ceil(gameDuration / 15));
     const ROUND_SECONDS = 20;
 
-    let panels = [], started = false, classifierReady = false, classifier = null;
+    let panels = [], started = false, classifierReady = false, model = null;
     let currentWord = null, currentRound = 0, roundActive = false, roundTimer = null;
     let usedWords = new Set();
 
@@ -175,8 +209,8 @@
 
       register(playerIndex, cb) { panels.push({ playerIndex, cb }); tryStart(); },
 
-      setClassifier(clf) {
-        classifier = clf; classifierReady = true;
+      setClassifier(mdl) {
+        model = mdl; classifierReady = true;
         broadcast('modelReady', {}); tryStart();
       },
 
@@ -189,8 +223,11 @@
       },
 
       classify(canvas, cb) {
-        if (!classifier || !canvas) return;
-        try { classifier.classify(canvas, cb); } catch (e) {}
+        if (!model || !canvas) return;
+        try {
+          const results = classifyCanvas(model, canvas);
+          cb(null, results);
+        } catch (e) { cb(e, null); }
       },
 
       getCurrentWord()  { return currentWord; },
@@ -412,7 +449,8 @@
       barPct.style.color       = '#888';
     }
 
-    /* ── Canvas preprocessing: crop to drawing, scale to 280×280 ── */
+    /* ── Canvas preprocessing: crop bounding box, return cropped canvas ── */
+    /* TF.js classifyCanvas() handles the 28×28 resize + inversion */
     function getProcessedCanvas() {
       const idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = idata.data;
@@ -420,45 +458,32 @@
       for (let y = 0; y < canvas.height; y++) {
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
-          if (d[i] < 180 || d[i+1] < 180 || d[i+2] < 180) {
+          if (d[i] < 200 || d[i+1] < 200 || d[i+2] < 200) {
             if (x < x0) x0 = x; if (x > x1) x1 = x;
             if (y < y0) y0 = y; if (y > y1) y1 = y;
           }
         }
       }
-      /* Nothing drawn yet — skip classification */
       if (x1 <= x0 || y1 <= y0 || (x1 - x0) < 5) return null;
 
-      const pad  = Math.max(x1 - x0, y1 - y0) * 0.25;
-      const srcX = Math.max(0,              Math.round(x0 - pad));
-      const srcY = Math.max(0,              Math.round(y0 - pad));
-      const srcX2 = Math.min(canvas.width,  Math.round(x1 + pad));
-      const srcY2 = Math.min(canvas.height, Math.round(y1 + pad));
+      const pad  = Math.max(x1 - x0, y1 - y0) * 0.20;
+      const srcX = Math.max(0,             Math.round(x0 - pad));
+      const srcY = Math.max(0,             Math.round(y0 - pad));
+      const srcX2 = Math.min(canvas.width, Math.round(x1 + pad));
+      const srcY2 = Math.min(canvas.height,Math.round(y1 + pad));
       const srcW  = srcX2 - srcX;
       const srcH  = srcY2 - srcY;
       if (srcW < 5 || srcH < 5) return null;
 
-      const size = 280;
+      /* Return square-cropped canvas (white background, drawn content centered) */
+      const size = Math.max(srcW, srcH);
       const tmp  = document.createElement('canvas');
       tmp.width  = size; tmp.height = size;
       const tc   = tmp.getContext('2d');
       tc.fillStyle = '#ffffff';
       tc.fillRect(0, 0, size, size);
-
-      const scale = Math.min((size - 20) / srcW, (size - 20) / srcH);
-      const dw = srcW * scale, dh = srcH * scale;
-      const dx = (size - dw) / 2, dy = (size - dh) / 2;
-      tc.drawImage(canvas, srcX, srcY, srcW, srcH, dx, dy, dw, dh);
-
-      /* Convert to pure black strokes on white — matches Quick Draw training format */
-      const id = tc.getImageData(0, 0, size, size);
-      const pd = id.data;
-      for (let i = 0; i < pd.length; i += 4) {
-        const bright = (pd[i] + pd[i+1] + pd[i+2]) / 3;
-        const val = bright < 200 ? 0 : 255;
-        pd[i] = pd[i+1] = pd[i+2] = val; pd[i+3] = 255;
-      }
-      tc.putImageData(id, 0, 0);
+      tc.drawImage(canvas, srcX, srcY, srcW, srcH,
+        (size - srcW) / 2, (size - srcH) / 2, srcW, srcH);
       return tmp;
     }
 
@@ -562,8 +587,8 @@
       <span style="font-size:0.78rem;color:#666;">처음 실행 시 5~10초 소요</span>
     </div>`);
 
-    getClassifier()
-      .then(clf  => { if (!dead) coord.setClassifier(clf); })
+    getModel()
+      .then(mdl  => { if (!dead) coord.setClassifier(mdl); })
       .catch(err => {
         console.error('[drawing-game] Model load error:', err);
         if (!dead) showOverlay('<div style="color:#f87171;font-size:0.9rem;">AI 로딩 실패<br><span style="font-size:0.78rem;color:#888;">네트워크를 확인해 주세요</span></div>');
@@ -595,6 +620,6 @@
   window.GameModules['drawing-game'] = { init };
 
   /* Auto-preload model as soon as this script is loaded */
-  getClassifier().catch(() => {});
+  getModel().catch(() => {});
 
 })();
