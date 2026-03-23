@@ -130,13 +130,14 @@
       sc.fillRect(0, 0, 28, 28);
       sc.drawImage(canvas, 0, 0, 28, 28);
 
-      /* Build tensor: grayscale, invert (bg→0, stroke→1), shape [1,28,28,1] */
+      /* Build tensor: grayscale binary, invert (bg→0, stroke→1), shape [1,28,28,1] */
       const imgData = sc.getImageData(0, 0, 28, 28);
       const raw = imgData.data; // RGBA
       const gray = new Float32Array(28 * 28);
       for (let i = 0; i < 28 * 28; i++) {
         const r = raw[i * 4], g = raw[i * 4 + 1], b = raw[i * 4 + 2];
-        gray[i] = 1 - (r + g + b) / 3 / 255; // invert: white bg→0, dark strokes→~1
+        const bright = (r + g + b) / 3;
+        gray[i] = bright < 200 ? 1.0 : 0.0; // binary: dark stroke→1, light bg→0
       }
 
       const tensor = window.tf.tensor4d(gray, [1, 28, 28, 1]);
@@ -496,7 +497,9 @@
         if (!word) return;
 
         coord.classify(getProcessedCanvas(), (err, results) => {
+          if (err) { console.error('[DoodleNet]', err); return; }
           if (dead || phase !== 'drawing' || !results?.length) return;
+          console.log('[DoodleNet top3]', results.slice(0,3).map(r=>r.label+'='+(r.confidence*100).toFixed(1)+'%').join(', '));
           updateBar(results, word);
 
           // Win condition: target in top-5 with sufficient confidence
@@ -584,7 +587,7 @@
     /* ── Load ml5 + DoodleNet ─────────────────────────────── */
     showOverlay(`<div style="font-size:0.95rem;color:#7ed3ff;line-height:1.6;">
       AI 모델 로딩 중...<br>
-      <span style="font-size:0.78rem;color:#666;">처음 실행 시 5~10초 소요</span>
+      <span style="font-size:0.78rem;color:#666;">DoodleNet (28×28) 로컬 모델</span>
     </div>`);
 
     getModel()
