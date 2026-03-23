@@ -216,6 +216,17 @@ const GAMES = [
     available:   true,
     entryFile:   'drawing-game/game.js',
   },
+  {
+    id:          'time-master',
+    name:        '시간 지배자',
+    icon:        '⏱️',
+    description: '목표 시간에 딱 맞게 [지금!]을 눌러요! 오차가 작을수록 고득점!',
+    color:       '#f59e0b',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'time-master/game.js',
+  },
 ];
 
 /**
