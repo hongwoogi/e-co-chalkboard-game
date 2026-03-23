@@ -403,19 +403,6 @@
     });
     canvasWrap.appendChild(overlay);
 
-    /* AI preview row */
-    const aiRow = el('div', {
-      style: `flex-shrink:0;padding:4px 12px 2px;background:#16213e;
-              border-top:1px solid rgba(126,211,255,0.08);
-              display:flex;align-items:center;gap:8px;`,
-    });
-    const aiLabel = el('span', { style: `font-size:0.6rem;color:#666;flex:1;overflow:hidden;`, text: 'AI 인식:' });
-    const aiPreview = document.createElement('canvas');
-    aiPreview.width=28; aiPreview.height=28;
-    aiPreview.style.cssText = `width:56px;height:56px;border:1px solid #333;border-radius:3px;
-      image-rendering:pixelated;background:#000;`;
-    aiRow.append(aiLabel, aiPreview);
-
     /* Bottom bar */
     const botBar = el('div', {
       style: `flex-shrink:0;padding:5px 12px;display:flex;align-items:center;
@@ -429,7 +416,7 @@
     });
     const scoreEl = el('span', { style: `color:#fdd34d;font-size:0.9rem;font-weight:bold;`, text: '점수: 0' });
     botBar.append(clearBtn, scoreEl);
-    container.append(topBar, canvasWrap, aiRow, botBar);
+    container.append(topBar, canvasWrap, botBar);
 
     /* ── Canvas drawing ───────────────────────────────────── */
     const ctx = canvas.getContext('2d');
@@ -457,9 +444,7 @@
       ctx.strokeStyle='#1a1a2e';
       ctx.lineWidth=Math.max(4,canvas.width*0.018);
       ctx.lineCap=ctx.lineJoin='round';
-      /* Clear AI preview */
-      aiPreview.getContext('2d').clearRect(0,0,28,28);
-      aiLabel.textContent='AI 인식:';
+
     }
 
     function getPos(e) {
@@ -535,21 +520,15 @@
         const word = coord.getCurrentWord();
         if (!word) return;
 
-        /* Update AI preview with same formula used for model */
-        renderPreview(strokes, aiPreview);
-
         coord.classify(strokes, (err, results) => {
           if (err) { console.error('[DoodleNet]', err); return; }
           if (dead || phase !== 'drawing' || !results?.length) return;
 
           updateBar(results, word);
-          aiLabel.textContent = results.slice(0,3)
-            .map(r => r.label.replace(/_/g,' ') + ' ' + (r.confidence*100|0) + '%')
-            .join(' · ');
 
-          /* Win: target appears in top-10 with confidence ≥ 10% */
-          const match = results.slice(0,10).find(
-            r => r.label.toLowerCase() === word.en.toLowerCase() && r.confidence >= 0.10
+          /* Win: target appears in top-5 with confidence ≥ 30% */
+          const match = results.slice(0,5).find(
+            r => r.label.toLowerCase() === word.en.toLowerCase() && r.confidence >= 0.30
           );
           if (match) coord.reportCorrect(playerIndex);
         });
