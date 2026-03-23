@@ -1463,6 +1463,7 @@
             LayoutManager.build(effectiveCount, variant);
             for (let i = 0; i < effectiveCount; i++) LayoutManager.loadGameInPanel(i, selectedGame);
           }
+          LayoutManager.startTimer(selectedTime);
           // Show tournament player numbers on panel badges
           if (tmInfo && tmInfo.players.length > 0) {
             document.querySelectorAll('.panel-player-badge').forEach((badge, i) => {
@@ -1614,6 +1615,7 @@
           LayoutManager.build(cfg.selectedCount, cfg.variant);
           for (let i = 0; i < cfg.selectedCount; i++) LayoutManager.loadGameInPanel(i, cfg.selectedGame);
         }
+        LayoutManager.startTimer(window._gameSettings?.duration || 60);
       });
 
       document.getElementById('btn-go-home').addEventListener('click', () => {

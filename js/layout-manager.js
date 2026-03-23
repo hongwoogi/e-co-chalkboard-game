@@ -52,6 +52,11 @@ const LayoutManager = (() => {
   /** The current layout descriptor string */
   let _currentLayout = null;
 
+  /** Timer state */
+  let _timerInterval = null;
+  let _timerStartedAt = 0;
+  let _timerDuration  = 0;
+
   /** Pending init callbacks per gameId while script is loading */
   const _pendingCallbacks = {};
 
@@ -119,12 +124,21 @@ const LayoutManager = (() => {
     header.appendChild(badge);
     header.appendChild(nameEl);
 
+    // ── Timer bar ─────────────────────────────
+    const timerBar = document.createElement('div');
+    timerBar.className = 'panel-timer-bar';
+    const timerFill = document.createElement('div');
+    timerFill.className = 'panel-timer-fill';
+    timerFill.dataset.role = 'timer-fill';
+    timerBar.appendChild(timerFill);
+
     // ── Panel content ─────────────────────────
     const content = document.createElement('div');
     content.className = 'panel-content';
     content.dataset.role = 'content';
 
     panel.appendChild(header);
+    panel.appendChild(timerBar);
     panel.appendChild(content);
 
     return panel;
@@ -425,6 +439,43 @@ const LayoutManager = (() => {
     _renderGameSelect(panelIndex);
   }
 
+  /* ── Timer ────────────────────────────────── */
+
+  function _clearTimer() {
+    if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+    /* Reset all fills to empty */
+    _panels.forEach(p => {
+      const f = p.querySelector('[data-role="timer-fill"]');
+      if (f) { f.style.width = '0%'; f.style.background = '#4ade80'; }
+    });
+  }
+
+  function startTimer(duration) {
+    _clearTimer();
+    if (!duration || duration <= 0) return;
+    _timerDuration  = duration * 1000;
+    _timerStartedAt = Date.now();
+
+    function tick() {
+      const ratio = Math.max(0, 1 - (Date.now() - _timerStartedAt) / _timerDuration);
+      const color  = ratio > 0.5 ? '#4ade80' : ratio > 0.25 ? '#fdd34d' : '#f87171';
+      _panels.forEach(p => {
+        const f = p.querySelector('[data-role="timer-fill"]');
+        if (!f) return;
+        f.style.width      = `${ratio * 100}%`;
+        f.style.background = color;
+      });
+      if (ratio <= 0) _clearTimer();
+    }
+
+    /* Set fills to 100% immediately */
+    _panels.forEach(p => {
+      const f = p.querySelector('[data-role="timer-fill"]');
+      if (f) { f.style.width = '100%'; f.style.background = '#4ade80'; }
+    });
+    _timerInterval = setInterval(tick, 250);
+  }
+
   /* ── Public API ───────────────────────────── */
 
   /**
@@ -507,6 +558,7 @@ const LayoutManager = (() => {
    * Called before building a new layout.
    */
   function destroy() {
+    _clearTimer();
     ++_sessionToken; // invalidate all pending callbacks from previous session
     clearTimeout(_gameOverTimeout);
     _gameOverTimeout = null;
@@ -620,7 +672,7 @@ const LayoutManager = (() => {
     document.head.appendChild(script);
   }
 
-  return { build, destroy, loadGameInPanel, getPanels, launchQuiz };
+  return { build, destroy, loadGameInPanel, getPanels, launchQuiz, startTimer };
 
 })();
 

@@ -231,6 +231,25 @@
 }
 
 /* ─────────────────────────────────────────────
+   PANEL TIMER BAR
+   Thin progress bar between header and content.
+   ───────────────────────────────────────────── */
+.panel-timer-bar {
+    flex-shrink: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+}
+
+.panel-timer-fill {
+    height: 100%;
+    width: 0%;
+    background: #4ade80;
+    transition: background 0.5s ease;
+    /* width is updated by JS — no CSS transition so it stays smooth */
+}
+
+/* ─────────────────────────────────────────────
    PANEL CONTENT AREA
    The scrollable (but usually overflow:hidden) main
    area inside each panel where a game renders.
