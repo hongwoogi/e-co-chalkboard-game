@@ -17,6 +17,17 @@
 
 const GAMES = [
   {
+    id:          'infinite-stairs',
+    name:        '무한의 계단',
+    icon:        '🪜',
+    description: '좌/우 버튼으로 계단을 올라가요! 틀리거나 시간 초과면 끝!',
+    color:       '#7ed3ff',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'infinite-stairs/game.js',
+  },
+  {
     id:          'reaction-speed',
     name:        '반응속도',
     icon:        '⚡',
