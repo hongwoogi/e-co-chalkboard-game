@@ -5,7 +5,7 @@
  * Falls back to localStorage if Supabase is unreachable.
  */
 (function () {
-  const SUPABASE_URL  = 'http://144.24.68.246:8000';
+  const SUPABASE_URL  = '/sb';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc0MzU2MTcyLCJleHAiOjE5MzIwMzYxNzJ9.Tte-16sqvVngAJTLJT7o2XNKV4b_WGAhaVtFf7Iy5dY';
   const LS_KEY        = 'lb_v1'; // localStorage fallback key
 
