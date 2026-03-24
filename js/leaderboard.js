@@ -1,10 +1,13 @@
 'use strict';
 /**
  * leaderboard.js
- * localStorage-backed leaderboard with time-period filtering.
+ * Supabase-backed leaderboard with time-period filtering.
+ * Falls back to localStorage if Supabase is unreachable.
  */
 (function () {
-  const KEY = 'lb_v1';
+  const SUPABASE_URL  = 'http://144.24.68.246:8000';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc0MzU2MTcyLCJleHAiOjE5MzIwMzYxNzJ9.Tte-16sqvVngAJTLJT7o2XNKV4b_WGAhaVtFf7Iy5dY';
+  const LS_KEY        = 'lb_v1'; // localStorage fallback key
 
   /* Build from window.GAMES at call time so new games are always included */
   function getGameNames() {
@@ -13,7 +16,6 @@
       window.GAMES.forEach(g => { map[g.id] = g.name; });
       return map;
     }
-    /* Fallback if registry not yet loaded */
     return {
       'number-pop':   '숫자 팡팡',   'color-match':  '색깔 맞추기',
       'math-race':    '수학 레이스',  'word-quiz':    '낱말 퀴즈',
@@ -28,39 +30,116 @@
     };
   }
 
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
+  /* ── Supabase REST helpers ─────────────────────────────── */
+  function sbHeaders() {
+    return {
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+    };
   }
-  function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
 
+  async function sbInsert(game, name, score) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+      method: 'POST',
+      headers: sbHeaders(),
+      body: JSON.stringify({ game, player: name, score }),
+    });
+    if (!res.ok) throw new Error(`insert failed: ${res.status}`);
+  }
+
+  async function sbSelect(game, cutoff, limit) {
+    const params = new URLSearchParams({
+      select: 'player,score,created_at',
+      game:   `eq.${game}`,
+      order:  'score.desc',
+      limit:  String(limit),
+    });
+    if (cutoff) params.set('created_at', `gte.${new Date(cutoff).toISOString()}`);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?${params}`, {
+      headers: sbHeaders(),
+    });
+    if (!res.ok) throw new Error(`select failed: ${res.status}`);
+    return res.json();
+  }
+
+  async function sbGamesWithData() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=game&limit=1000`, {
+      headers: sbHeaders(),
+    });
+    if (!res.ok) throw new Error(`games query failed: ${res.status}`);
+    const rows = await res.json();
+    return [...new Set(rows.map(r => r.game))];
+  }
+
+  /* ── localStorage fallback helpers ────────────────────── */
+  function lsLoad() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; }
+  }
+  function lsSave(d) { localStorage.setItem(LS_KEY, JSON.stringify(d)); }
+
+  function lsAdd(game, name, score) {
+    const d = lsLoad();
+    if (!d[game]) d[game] = [];
+    d[game].push({ n: (name || '익명').trim().slice(0, 10), s: +score, t: Date.now() });
+    d[game].sort((a, b) => b.s - a.s);
+    if (d[game].length > 500) d[game].length = 500;
+    lsSave(d);
+  }
+
+  function lsGet(game, period, limit) {
+    const all = (lsLoad()[game] || []);
+    const now = Date.now();
+    const cutoff = { '오늘': now - 86400000, '이번주': now - 604800000, '이번달': now - 2592000000, '전체': 0 }[period] ?? 0;
+    return all.filter(e => e.t >= cutoff).slice(0, limit).map(e => ({ player: e.n, score: e.s }));
+  }
+
+  /* ── Public API ────────────────────────────────────────── */
   const LB = {
+    /* Save score — tries Supabase first, falls back to localStorage */
     add(game, name, score) {
       if (!game || score == null || isNaN(score)) return;
-      const d = load();
-      if (!d[game]) d[game] = [];
-      d[game].push({ n: (name || '익명').trim().slice(0, 10), s: +score, t: Date.now() });
-      d[game].sort((a, b) => b.s - a.s);
-      if (d[game].length > 500) d[game].length = 500;
-      save(d);
+      const safeName = (name || '익명').trim().slice(0, 10);
+      sbInsert(game, safeName, +score).catch(() => {
+        lsAdd(game, safeName, score);
+      });
     },
 
-    get(game, period, limit = 10) {
-      const all = (load()[game] || []);
+    /* Fetch top scores — returns a Promise */
+    async get(game, period, limit = 10) {
       const now = Date.now();
-      const cutoff = { '오늘': now - 86400000, '이번주': now - 604800000, '이번달': now - 2592000000, '전체': 0 }[period] ?? 0;
-      return all.filter(e => e.t >= cutoff).slice(0, limit);
+      const cutoffMs = { '오늘': now - 86400000, '이번주': now - 604800000, '이번달': now - 2592000000, '전체': 0 }[period] ?? 0;
+      try {
+        return await sbSelect(game, cutoffMs || null, limit);
+      } catch {
+        return lsGet(game, period, limit);
+      }
     },
 
-    hasData() {
-      const d = load();
-      return Object.values(d).some(arr => arr.length > 0);
+    /* Check if any scores exist — returns a Promise */
+    async hasData() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=game&limit=1`, { headers: sbHeaders() });
+        const rows = await res.json();
+        return Array.isArray(rows) && rows.length > 0;
+      } catch {
+        const d = lsLoad();
+        return Object.values(d).some(arr => arr.length > 0);
+      }
     },
 
     get GAME_NAMES() { return getGameNames(); },
 
-    allGames() {
-      const d = load();
-      return Object.keys(getGameNames()).filter(g => d[g]?.length);
+    /* Returns a Promise<string[]> of game ids that have scores */
+    async allGames() {
+      try {
+        const games = await sbGamesWithData();
+        return Object.keys(getGameNames()).filter(id => games.includes(id));
+      } catch {
+        const d = lsLoad();
+        return Object.keys(getGameNames()).filter(g => d[g]?.length);
+      }
     }
   };
 

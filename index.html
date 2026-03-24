@@ -1343,11 +1343,11 @@
 
   </div><!-- /stage -->
 
-  <script src="js/sound-engine.js?v=20260325"></script>
-  <script src="js/leaderboard.js?v=20260325"></script>
-  <script src="js/tournament.js?v=20260325"></script>
-  <script src="js/game-registry.js?v=20260325"></script>
-  <script src="js/layout-manager.js?v=20260325"></script>
+  <script src="js/sound-engine.js?v=20260326"></script>
+  <script src="js/leaderboard.js?v=20260326"></script>
+  <script src="js/tournament.js?v=20260326"></script>
+  <script src="js/game-registry.js?v=20260326"></script>
+  <script src="js/layout-manager.js?v=20260326"></script>
   <script>
     (function() {
       /* ── State ── */
@@ -1415,7 +1415,7 @@
           /* Eagerly load drawing-game script (and its model) when card is selected */
           if (selectedGame === 'drawing-game' && !window.GameModules?.['drawing-game']) {
             const _s = document.createElement('script');
-            _s.src = 'games/drawing-game/game.js?v=20260325';
+            _s.src = 'games/drawing-game/game.js?v=20260326';
             document.head.appendChild(_s);
           }
           const g = window.getGameById(card.dataset.game);
@@ -1653,10 +1653,11 @@
       /* ── Leaderboard modal ── */
       let _lbCurrentGame = '';
 
-      function openLeaderboard(preferGame) {
+      async function openLeaderboard(preferGame) {
         const NAMES = window.Leaderboard?.GAME_NAMES || {};
         /* Only show games that have saved data; if preferGame has data, include it too */
-        const withData = new Set(window.Leaderboard?.allGames() || []);
+        const gamesWithData = await (window.Leaderboard?.allGames?.() || Promise.resolve([]));
+        const withData = new Set(gamesWithData);
         if (preferGame) withData.add(preferGame);
         /* Preserve registry order */
         const gameIds = Object.keys(NAMES).filter(id => withData.has(id));
@@ -1675,17 +1676,19 @@
         window.SoundEngine?.play('click');
       }
 
-      function renderLbList() {
+      async function renderLbList() {
         const period = document.querySelector('#lb-tabs .lb-tab.active')?.dataset.period || '전체';
-        const rows = window.Leaderboard?.get(_lbCurrentGame, period) || [];
+        const lbList = document.getElementById('lb-list');
+        lbList.innerHTML = '<div class="lb-empty">불러오는 중...</div>';
+        const rows = (await window.Leaderboard?.get(_lbCurrentGame, period)) || [];
         const medals = ['🥇','🥈','🥉'];
-        document.getElementById('lb-list').innerHTML = rows.length ? rows.map((r, i) => {
-          const d = new Date(r.t);
+        lbList.innerHTML = rows.length ? rows.map((r, i) => {
+          const d = new Date(r.created_at || r.t);
           const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
           return `<div class="lb-row">
             <span class="lb-rank">${medals[i] || (i+1)}</span>
-            <span class="lb-name">${r.n}</span>
-            <span class="lb-score">${r.s.toLocaleString()}점</span>
+            <span class="lb-name">${r.player || r.n}</span>
+            <span class="lb-score">${(r.score ?? r.s).toLocaleString()}점</span>
             <span class="lb-date">${dateStr}</span>
           </div>`;
         }).join('') : '<div class="lb-empty">아직 기록이 없어요 🎮<br><small style="font-size:0.85em;color:#ccc">게임을 플레이하고 이름을 저장해보세요!</small></div>';
