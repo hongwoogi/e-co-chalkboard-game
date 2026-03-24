@@ -218,10 +218,19 @@
       return a;
     }
 
-    function flagEmoji(code) {
-      return code.toUpperCase().split('').map(c =>
-        String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
-      ).join('');
+    function flagImg(code) {
+      const img = document.createElement('img');
+      img.src = `https://flagcdn.com/w160/${code.toLowerCase()}.png`;
+      img.alt = code.toUpperCase();
+      img.style.cssText = `
+        width: clamp(80px, 28vmin, 200px);
+        height: auto;
+        display: block;
+        border-radius: 4px;
+        border: 3px solid rgba(0,0,0,0.4);
+        box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+      `;
+      return img;
     }
 
     function updateScores() {
@@ -273,7 +282,8 @@
       currentQ.choices   = choices;
       currentQ.correctIdx = choices.indexOf(currentQ.name);
 
-      flagEl.innerHTML     = `<span style="font-size:clamp(5rem,18vmin,12rem);line-height:1;">${flagEmoji(currentQ.code)}</span>`;
+      flagEl.innerHTML = '';
+      flagEl.appendChild(flagImg(currentQ.code));
       qtextEl.textContent  = '이 나라의 이름은?';
       qnumEl.textContent   = `문제 ${questionNum}`;
 
