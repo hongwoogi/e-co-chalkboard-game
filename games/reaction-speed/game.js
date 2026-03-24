@@ -89,7 +89,7 @@
 
   /* ── init() ──────────────────────────────────────────────────── */
   function init(container, options) {
-    const { playerIndex = 0, onGameOver } = options || {};
+    const { playerIndex = 0, playerColor = '#4ade80', onGameOver } = options || {};
     const totalPlayers = window._gameSettings?.playerCount || 1;
 
     if (!window._ReactionCoord || window._ReactionCoord._gameover) {
@@ -153,10 +153,10 @@
     function setFlash() {
       container.style.background = '#1a4a1a';
       tapBtn.disabled = false;
-      tapBtn.style.background = 'linear-gradient(135deg,#4ade80,#16a34a)';
+      tapBtn.style.background = `linear-gradient(135deg,${playerColor},color-mix(in srgb,${playerColor} 60%,#000))`;
       tapBtn.style.color = '#fff';
-      tapBtn.style.borderColor = '#4ade80';
-      tapBtn.style.boxShadow = '0 0 40px rgba(74,222,128,0.5)';
+      tapBtn.style.borderColor = playerColor;
+      tapBtn.style.boxShadow = `0 0 40px color-mix(in srgb,${playerColor} 50%,transparent)`;
     }
 
     function showOverlay(html) { overlay.innerHTML = html; overlay.style.display = 'flex'; }

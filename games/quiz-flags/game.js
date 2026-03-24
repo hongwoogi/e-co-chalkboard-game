@@ -131,6 +131,7 @@
         flex-direction: column;
         gap: 3px;
         overflow: hidden;
+        border-top: 3px solid ${color};
       `;
 
       // Player header
@@ -140,7 +141,7 @@
         font-family: var(--font-display);
         font-size: clamp(0.8rem,2.5vmin,1.3rem);
         padding: 0.2em;
-        background: rgba(255,255,255,0.08);
+        background: color-mix(in srgb,${color} 20%,rgba(0,0,0,0.5));
         border-radius: 4px;
         flex-shrink: 0;
       `;
@@ -161,10 +162,11 @@
       ['A','B','C','D'].forEach((label, ci) => {
         const btn = document.createElement('button');
         btn.dataset.choice = ci;
+        btn.dataset.playerColor = color;
         btn.style.cssText = `
-          border: 2.5px solid rgba(255,255,255,0.25);
+          border: 2.5px solid color-mix(in srgb,${color} 50%,rgba(255,255,255,0.1));
           border-radius: 1.2em;
-          background: rgba(255,255,255,0.1);
+          background: color-mix(in srgb,${color} 8%,rgba(255,255,255,0.05));
           color: #fff;
           font-family: var(--font-display);
           font-size: clamp(1.1rem,3vmin,1.9rem);
@@ -248,8 +250,9 @@
 
       // Reset button styles
       playerBtns.forEach(pBtns => pBtns.forEach(btn => {
-        btn.style.background    = 'rgba(255,255,255,0.08)';
-        btn.style.borderColor   = 'rgba(255,255,255,0.2)';
+        const c = btn.dataset.playerColor || '#fff';
+        btn.style.background    = `color-mix(in srgb,${c} 8%,rgba(255,255,255,0.05))`;
+        btn.style.borderColor   = `color-mix(in srgb,${c} 50%,rgba(255,255,255,0.1))`;
         btn.style.opacity       = '1';
         btn.style.pointerEvents = '';
         btn.style.transform     = '';

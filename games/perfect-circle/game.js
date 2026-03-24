@@ -110,7 +110,7 @@
 
   /* ── init() ──────────────────────────────────────────────────── */
   function init(container, options) {
-    const { playerIndex = 0, onGameOver } = options || {};
+    const { playerIndex = 0, playerColor = '#7ed3ff', onGameOver } = options || {};
     const totalPlayers = window._gameSettings?.playerCount || 1;
 
     if (!window._CircleCoord || window._CircleCoord._gameover) {
@@ -199,7 +199,7 @@
       points.push([x, y]);
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.strokeStyle = '#7ed3ff';
+      ctx.strokeStyle = playerColor;
       ctx.lineWidth   = 3;
       ctx.lineCap = ctx.lineJoin = 'round';
     }

@@ -1343,11 +1343,11 @@
 
   </div><!-- /stage -->
 
-  <script src="js/sound-engine.js?v=20260324"></script>
-  <script src="js/leaderboard.js?v=20260324"></script>
-  <script src="js/tournament.js?v=20260324"></script>
-  <script src="js/game-registry.js?v=20260324"></script>
-  <script src="js/layout-manager.js?v=20260324"></script>
+  <script src="js/sound-engine.js?v=20260325"></script>
+  <script src="js/leaderboard.js?v=20260325"></script>
+  <script src="js/tournament.js?v=20260325"></script>
+  <script src="js/game-registry.js?v=20260325"></script>
+  <script src="js/layout-manager.js?v=20260325"></script>
   <script>
     (function() {
       /* ── State ── */
@@ -1415,7 +1415,7 @@
           /* Eagerly load drawing-game script (and its model) when card is selected */
           if (selectedGame === 'drawing-game' && !window.GameModules?.['drawing-game']) {
             const _s = document.createElement('script');
-            _s.src = 'games/drawing-game/game.js?v=20260324';
+            _s.src = 'games/drawing-game/game.js?v=20260325';
             document.head.appendChild(_s);
           }
           const g = window.getGameById(card.dataset.game);
