@@ -1663,19 +1663,13 @@
         document.getElementById('lb-modal').classList.add('open');
         window.SoundEngine?.play('click');
 
-        // Load game list, then scores (scores need correct _lbCurrentGame)
-        const gamesWithData = await (window.Leaderboard?.allGames?.() || Promise.resolve([]));
-        const withData = new Set(gamesWithData);
-        if (preferGame) withData.add(preferGame);
-        /* Preserve registry order */
-        const gameIds = Object.keys(NAMES).filter(id => withData.has(id));
+        // Show all games regardless of whether they have scores
+        const gameIds = Object.keys(NAMES);
         _lbCurrentGame = (preferGame && gameIds.includes(preferGame)) ? preferGame : gameIds[0] || '';
 
-        gameList.innerHTML = gameIds.length
-          ? gameIds.map(id =>
-              `<button class="lb-game-btn${id === _lbCurrentGame ? ' active' : ''}" data-game="${id}">${NAMES[id]}</button>`
-            ).join('')
-          : '<div style="padding:12px;color:#888;font-size:0.85rem;">아직 기록이 없어요</div>';
+        gameList.innerHTML = gameIds.map(id =>
+          `<button class="lb-game-btn${id === _lbCurrentGame ? ' active' : ''}" data-game="${id}">${NAMES[id]}</button>`
+        ).join('');
 
         renderLbList();
       }
