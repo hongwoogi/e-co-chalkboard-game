@@ -1663,11 +1663,8 @@
         document.getElementById('lb-modal').classList.add('open');
         window.SoundEngine?.play('click');
 
-        // Load game list and scores in parallel
-        const [gamesWithData] = await Promise.all([
-          window.Leaderboard?.allGames?.() || Promise.resolve([]),
-          renderLbList(),
-        ]);
+        // Load game list, then scores (scores need correct _lbCurrentGame)
+        const gamesWithData = await (window.Leaderboard?.allGames?.() || Promise.resolve([]));
         const withData = new Set(gamesWithData);
         if (preferGame) withData.add(preferGame);
         /* Preserve registry order */
@@ -1679,6 +1676,8 @@
               `<button class="lb-game-btn${id === _lbCurrentGame ? ' active' : ''}" data-game="${id}">${NAMES[id]}</button>`
             ).join('')
           : '<div style="padding:12px;color:#888;font-size:0.85rem;">아직 기록이 없어요</div>';
+
+        renderLbList();
       }
 
       async function renderLbList() {
