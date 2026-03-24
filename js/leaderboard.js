@@ -30,6 +30,8 @@
     };
   }
 
+  const TIMEOUT_MS = 4000; // fail fast so localStorage fallback kicks in quickly
+
   /* ── Supabase REST helpers ─────────────────────────────── */
   function sbHeaders() {
     return {
@@ -40,8 +42,15 @@
     };
   }
 
+  function sbFetch(url, opts = {}) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    return fetch(url, { ...opts, signal: ctrl.signal })
+      .finally(() => clearTimeout(timer));
+  }
+
   async function sbInsert(game, name, score) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+    const res = await sbFetch(`${SUPABASE_URL}/rest/v1/scores`, {
       method: 'POST',
       headers: sbHeaders(),
       body: JSON.stringify({ game, player: name, score }),
@@ -57,20 +66,27 @@
       limit:  String(limit),
     });
     if (cutoff) params.set('created_at', `gte.${new Date(cutoff).toISOString()}`);
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?${params}`, {
+    const res = await sbFetch(`${SUPABASE_URL}/rest/v1/scores?${params}`, {
       headers: sbHeaders(),
     });
     if (!res.ok) throw new Error(`select failed: ${res.status}`);
     return res.json();
   }
 
+  let _allGamesCache = null;
+  let _allGamesCacheTs = 0;
+
   async function sbGamesWithData() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=game&limit=1000`, {
+    // Use cache if fresh (60 s)
+    if (_allGamesCache && Date.now() - _allGamesCacheTs < 60000) return _allGamesCache;
+    const res = await sbFetch(`${SUPABASE_URL}/rest/v1/scores?select=game&limit=200`, {
       headers: sbHeaders(),
     });
     if (!res.ok) throw new Error(`games query failed: ${res.status}`);
     const rows = await res.json();
-    return [...new Set(rows.map(r => r.game))];
+    _allGamesCache = [...new Set(rows.map(r => r.game))];
+    _allGamesCacheTs = Date.now();
+    return _allGamesCache;
   }
 
   /* ── localStorage fallback helpers ────────────────────── */
@@ -120,7 +136,7 @@
     /* Check if any scores exist — returns a Promise */
     async hasData() {
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=game&limit=1`, { headers: sbHeaders() });
+        const res = await sbFetch(`${SUPABASE_URL}/rest/v1/scores?select=game&limit=1`, { headers: sbHeaders() });
         const rows = await res.json();
         return Array.isArray(rows) && rows.length > 0;
       } catch {
