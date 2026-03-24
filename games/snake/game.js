@@ -33,7 +33,7 @@
       height: 100%;
       overflow: hidden;
       position: relative;
-      background: #0d1a0d;
+      background:#f7f3ee;
     `;
 
     // HUD

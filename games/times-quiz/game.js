@@ -46,7 +46,7 @@
     container.innerHTML = '';
     container.style.cssText = `
       display: flex; flex-direction: column; height: 100%;
-      overflow: hidden; background: #0d0d1a; font-family: var(--font-body);
+      overflow: hidden; background:#f7f3ee; font-family: var(--font-body);
     `;
 
     const topBar = document.createElement('div');

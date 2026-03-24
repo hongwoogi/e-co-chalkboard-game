@@ -80,7 +80,7 @@
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-      background: #0d1a1a;
+      background:#f7f3ee;
       font-family: var(--font-body);
     `;
 

@@ -66,7 +66,7 @@
         height: 100%;
         overflow: hidden;
         position: relative;
-        background: var(--surface-container-low);
+        background:#f7f3ee;
       `;
 
       /* Top bar */

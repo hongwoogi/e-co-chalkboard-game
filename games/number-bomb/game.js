@@ -35,7 +35,7 @@
     container.innerHTML = '';
     container.style.cssText = `
       display: flex; flex-direction: column; height: 100%;
-      overflow: hidden; position: relative; background: #12001a;
+      overflow: hidden; position: relative; background:#f7f3ee;
     `;
 
     // Top HUD

@@ -116,7 +116,7 @@
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#0f0f1a;position:relative;';
+    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#f7f3ee;position:relative;';
 
     /* Header: round info + target */
     const header = el('div', {

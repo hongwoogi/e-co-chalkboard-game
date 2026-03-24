@@ -358,7 +358,7 @@
 
     /* ── DOM ──────────────────────────────────────────────── */
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#1c1c2e;';
+    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#f7f3ee;';
 
     /* Top bar */
     const topBar = el('div', {

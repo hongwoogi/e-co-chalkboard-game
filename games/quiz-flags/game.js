@@ -68,7 +68,7 @@
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-      background: #1a1a2e;
+      background:#f7f3ee;
       font-family: var(--font-body);
     `;
 

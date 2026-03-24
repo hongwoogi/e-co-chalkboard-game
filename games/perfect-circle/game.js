@@ -124,7 +124,7 @@
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#0f1923;position:relative;';
+    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#f7f3ee;position:relative;';
 
     const header = el('div', {
       style: `flex-shrink:0;padding:10px 14px 8px;text-align:center;background:rgba(0,0,0,0.3);`,

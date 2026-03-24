@@ -32,7 +32,7 @@
 
     /* ── Build UI ── */
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:#1a1a2e;overflow:hidden;position:relative;';
+    container.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:#f7f3ee;overflow:hidden;position:relative;';
 
     // HUD
     const hud = document.createElement('div');

@@ -94,7 +94,7 @@
     container.innerHTML = '';
     container.style.cssText = `
       display: flex; flex-direction: column; height: 100%;
-      overflow: hidden; background: #0a1628; position: relative;
+      overflow: hidden; background:#f7f3ee; position: relative;
     `;
 
     // HUD

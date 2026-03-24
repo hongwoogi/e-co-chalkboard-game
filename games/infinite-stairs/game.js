@@ -45,7 +45,7 @@
     container.innerHTML = '';
     container.style.cssText = `
       display:flex;flex-direction:column;height:100%;
-      overflow:hidden;position:relative;background:#0d1520;
+      overflow:hidden;position:relative;background:#f7f3ee;
     `;
 
     // HUD
@@ -244,11 +244,11 @@
       ctx.clearRect(0, 0, W, H);
 
       // Background
-      ctx.fillStyle = '#0d1520';
+      ctx.fillStyle = '#f7f3ee';
       ctx.fillRect(0, 0, W, H);
 
       // Subtle grid lines for depth
-      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.04)';
       ctx.lineWidth = 1;
       for (let gy = ((-camY) % 40); gy < H; gy += 40) {
         ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
@@ -268,7 +268,7 @@
           ctx.shadowColor = playerColor;
           ctx.shadowBlur  = 10;
         } else {
-          ctx.fillStyle   = '#1e3a5f';
+          ctx.fillStyle   = '#8ba8c8';
           ctx.globalAlpha = 1;
           ctx.shadowBlur  = 0;
         }
@@ -300,12 +300,12 @@
         ctx.fill();
         ctx.shadowBlur = 0;
         // Eyes
-        ctx.fillStyle = '#0d1520';
+        ctx.fillStyle = '#2a2a2a';
         ctx.fillRect(charX - 8, charY + 8, 4, 5);
         ctx.fillRect(charX + 4, charY + 8, 4, 5);
         // Smile (when alive)
         if (!dead) {
-          ctx.strokeStyle = '#0d1520';
+          ctx.strokeStyle = '#2a2a2a';
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.arc(charX, charY + CHAR_H - 8, 5, 0, Math.PI);
@@ -317,9 +317,9 @@
 
       // Dead overlay
       if (dead) {
-        ctx.fillStyle = 'rgba(200,30,30,0.22)';
+        ctx.fillStyle = 'rgba(200,30,30,0.15)';
         ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = '#cc2222';
         ctx.font = `bold ${Math.round(W * 0.1)}px var(--font-display, sans-serif)`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';

@@ -102,7 +102,7 @@
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;background:#0f1923;transition:background 0.1s;';
+    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;background:#f7f3ee;transition:background 0.1s;';
 
     const header = el('div', {
       style: `flex-shrink:0;padding:10px 14px 8px;text-align:center;background:rgba(0,0,0,0.3);`,
@@ -142,7 +142,7 @@
 
     /* ── Helpers ──────────────────────────────────────────────── */
     function setWaiting() {
-      container.style.background = '#0f1923';
+      container.style.background = '#f7f3ee';
       tapBtn.disabled = true;
       tapBtn.style.background = 'rgba(255,255,255,0.08)';
       tapBtn.style.color = 'rgba(255,255,255,0.3)';
@@ -151,7 +151,7 @@
     }
 
     function setFlash() {
-      container.style.background = '#1a4a1a';
+      container.style.background = '#d4f0d4';
       tapBtn.disabled = false;
       tapBtn.style.background = `linear-gradient(135deg,${playerColor},color-mix(in srgb,${playerColor} 60%,#000))`;
       tapBtn.style.color = '#fff';
