@@ -1655,7 +1655,15 @@
 
       async function openLeaderboard(preferGame) {
         const NAMES = window.Leaderboard?.GAME_NAMES || {};
-        /* Only show games that have saved data; if preferGame has data, include it too */
+        // Open modal immediately — don't wait for network
+        _lbCurrentGame = preferGame || '';
+        const gameList = document.getElementById('lb-game-list');
+        gameList.innerHTML = '<div style="padding:12px;color:#888;font-size:0.85rem;">불러오는 중...</div>';
+        document.getElementById('lb-list').innerHTML = '<div class="lb-empty">불러오는 중...</div>';
+        document.getElementById('lb-modal').classList.add('open');
+        window.SoundEngine?.play('click');
+
+        // Load game list in background
         const gamesWithData = await (window.Leaderboard?.allGames?.() || Promise.resolve([]));
         const withData = new Set(gamesWithData);
         if (preferGame) withData.add(preferGame);
@@ -1663,8 +1671,6 @@
         const gameIds = Object.keys(NAMES).filter(id => withData.has(id));
         _lbCurrentGame = (preferGame && gameIds.includes(preferGame)) ? preferGame : gameIds[0] || '';
 
-        // Build sidebar game buttons
-        const gameList = document.getElementById('lb-game-list');
         gameList.innerHTML = gameIds.length
           ? gameIds.map(id =>
               `<button class="lb-game-btn${id === _lbCurrentGame ? ' active' : ''}" data-game="${id}">${NAMES[id]}</button>`
@@ -1672,8 +1678,6 @@
           : '<div style="padding:12px;color:#888;font-size:0.85rem;">아직 기록이 없어요</div>';
 
         renderLbList();
-        document.getElementById('lb-modal').classList.add('open');
-        window.SoundEngine?.play('click');
       }
 
       async function renderLbList() {
@@ -1683,8 +1687,9 @@
         const rows = (await window.Leaderboard?.get(_lbCurrentGame, period)) || [];
         const medals = ['🥇','🥈','🥉'];
         lbList.innerHTML = rows.length ? rows.map((r, i) => {
-          const d = new Date(r.created_at || r.t);
-          const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+          const ts = r.created_at || r.t;
+          const d = ts ? new Date(ts) : null;
+          const dateStr = (d && !isNaN(d.getTime())) ? `${d.getMonth()+1}/${d.getDate()}` : '';
           return `<div class="lb-row">
             <span class="lb-rank">${medals[i] || (i+1)}</span>
             <span class="lb-name">${r.player || r.n}</span>
