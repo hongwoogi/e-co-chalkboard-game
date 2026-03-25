@@ -88,18 +88,18 @@
     // Controls
     const ctrlRow = document.createElement('div');
     ctrlRow.style.cssText = `
-      flex-shrink:0;display:flex;gap:8px;padding:8px 10px;
-      background:rgba(0,0,0,0.35);border-top:3px solid rgba(0,0,0,0.08);
+      flex-shrink:0;display:flex;gap:10px;padding:10px 12px;
+      background:rgba(0,0,0,0.06);border-top:3px solid rgba(0,0,0,0.08);
     `;
 
     function makeBtn(label, dir) {
       const btn = document.createElement('button');
       btn.textContent = label;
       btn.style.cssText = `
-        flex:1;padding:12px 0;font-size:1.8rem;font-weight:bold;cursor:pointer;
+        flex:1;min-height:54px;padding:8px 0;font-size:2rem;font-weight:bold;cursor:pointer;
         background:color-mix(in srgb,${playerColor} 40%,#f0ece5);
-        color:${playerColor};border:3px solid ${playerColor};border-radius:12px;
-        box-shadow:0 5px 0 rgba(0,0,0,0.55);
+        color:${playerColor};border:3px solid ${playerColor};border-radius:14px;
+        box-shadow:0 5px 0 color-mix(in srgb,${playerColor} 60%,#000);
         transition:transform 0.07s,box-shadow 0.07s;
         font-family:var(--font-display);touch-action:manipulation;user-select:none;
       `;

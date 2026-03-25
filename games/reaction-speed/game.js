@@ -98,7 +98,7 @@
     }
     const coord = window._ReactionCoord;
 
-    let myScore = 0, phase = 'waiting', dead = false, tooEarly = false, enabledAt = 0;
+    let myScore = 0, phase = 'waiting', dead = false, tooEarly = false, enabledAt = 0, pressedAt = 0;
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
@@ -150,6 +150,9 @@
       tapBtn.style.boxShadow = '0 5px 0 rgba(0,0,0,0.2)';
     }
 
+    /* Track when the user's finger/mouse first pressed the button */
+    tapBtn.addEventListener('pointerdown', () => { pressedAt = performance.now(); });
+
     function setFlash() {
       container.style.background = '#d4f0d4';
       tapBtn.disabled = false;
@@ -177,8 +180,8 @@
         return;
       }
       if (phase !== 'flash' || dead) return;
-      /* Ignore accidental taps within 80ms of the button being enabled */
-      if (performance.now() - enabledAt < 80) return;
+      /* Reject if the press started before the flash (finger was already on button) */
+      if (pressedAt < enabledAt) return;
 
       const ms = Date.now() - coord.getFlashedAt();
       const result = calcScore(ms);

@@ -165,7 +165,7 @@
     }
 
     function clearCanvas() {
-      ctx.fillStyle = '#0f1923';
+      ctx.fillStyle = '#f7f3ee';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       /* Guide circle outline */
       if (phase === 'drawing' || phase === 'waiting') {
