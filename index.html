@@ -999,6 +999,18 @@
 
           <button class="btn-lb-sidebar" id="btn-open-lb">🏆 리더보드</button>
 
+          <div id="visitor-counter" style="
+            display:none;
+            align-items:center;
+            justify-content:center;
+            gap:0.25em;
+            font-family:var(--font-body);
+            font-size:clamp(0.72rem,1.1vw,0.85rem);
+            color:#b08060;
+            text-align:center;
+            padding:0.3em 0;
+          ">—</div>
+
         </div>
       </div>
 
@@ -1377,6 +1389,7 @@
 
   <script src="js/sound-engine.js?v=20260326"></script>
   <script src="js/leaderboard.js?v=20260325b"></script>
+  <script src="js/visitor-counter.js?v=20260325"></script>
   <script src="js/tournament.js?v=20260326"></script>
   <script src="js/game-registry.js?v=20260326"></script>
   <script src="js/layout-manager.js?v=20260326"></script>
@@ -1749,6 +1762,9 @@
       document.getElementById('btn-open-lb').addEventListener('click', () => {
         openLeaderboard(window._lastGameConfig?.selectedGame);
       });
+
+      /* ── Visitor counter ── */
+      window.VisitorCounter?.init();
 
       /* ── Prevent scroll on game area ── */
       document.addEventListener('contextmenu', e => e.preventDefault());
