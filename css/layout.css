@@ -11,8 +11,7 @@
 #stage {
     position: fixed;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
+    /* inset:0 already fills the viewport — avoid 100vh which over-estimates on mobile */
     overflow: hidden;
     background-color: var(--background);
 }
