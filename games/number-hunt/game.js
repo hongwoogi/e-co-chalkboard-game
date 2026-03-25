@@ -202,7 +202,7 @@
             cell.found = true;
             el.style.background   = playerColor.startsWith('var') ? 'var(--primary)' : playerColor;
             el.style.borderColor  = 'transparent';
-            el.style.color        = '#fff';
+            el.style.color        = '#1a1a2e';
             el.style.transform    = 'scale(1.15)';
             setTimeout(() => { el.style.transform = ''; }, 200);
 

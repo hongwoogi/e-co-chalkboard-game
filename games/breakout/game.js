@@ -60,8 +60,8 @@
     `;
     hud.innerHTML = `
       <span id="bo-score-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-lg);color:${playerColor};">0</span>
-      <span id="bo-level-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#fff;">Lv.1</span>
-      <span id="bo-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#fff;"></span>
+      <span id="bo-level-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#1a1a2e;">Lv.1</span>
+      <span id="bo-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#1a1a2e;"></span>
       <span id="bo-lives-${playerIndex}" style="font-size:var(--text-md);">❤️❤️❤️</span>
     `;
     container.appendChild(hud);
@@ -95,8 +95,8 @@
       btn.style.cssText = `
         width: 4em; height: 3em;
         border: none; border-radius: 0.5em;
-        background: rgba(255,255,255,0.12);
-        color: #fff; font-size: clamp(1.2rem,3.5vw,2rem);
+        background: rgba(0,0,0,0.12);
+        color: #1a1a2e; font-size: clamp(1.2rem,3.5vw,2rem);
         cursor: pointer; touch-action: manipulation; user-select: none;
         transition: background 0.1s;
       `;
@@ -304,7 +304,7 @@
       const lv = document.getElementById(`bo-lives-${playerIndex}`);
       if (s)  s.textContent  = score;
       if (l)  l.textContent  = `Lv.${level}`;
-      if (t)  { t.textContent = `${timeLeft}s`; t.style.color = timeLeft <= 10 ? '#ff5252' : '#fff'; }
+      if (t)  { t.textContent = `${timeLeft}s`; t.style.color = timeLeft <= 10 ? '#ff5252' : '#1a1a2e'; }
       if (lv) lv.textContent = '❤️'.repeat(lives);
     }
 

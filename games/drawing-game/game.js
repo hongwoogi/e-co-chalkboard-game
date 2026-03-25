@@ -101,7 +101,7 @@
 
   function renderStrokesOnCanvas(strokes, canvas) {
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (!strokes?.length) return;
     let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity;
@@ -377,7 +377,7 @@
       text: '—',
     });
     const barTrack = el('div', {
-      style: `flex:1;height:9px;background:rgba(255,255,255,0.08);border-radius:5px;overflow:hidden;`,
+      style: `flex:1;height:9px;background:rgba(0,0,0,0.08);border-radius:5px;overflow:hidden;`,
     });
     const barFill = el('div', {
       style: `height:100%;width:0%;background:#7ed3ff;border-radius:5px;transition:width 0.35s ease,background 0.25s;`,
@@ -410,7 +410,7 @@
               border-top:1px solid rgba(126,211,255,0.15);`,
     });
     const clearBtn = el('button', {
-      style: `background:#c0392b;color:#fff;border:none;border-radius:6px;
+      style: `background:#c0392b;color:#1a1a2e;border:none;border-radius:6px;
               padding:4px 14px;font-size:0.8rem;cursor:pointer;font-family:var(--font-body);`,
       text: '지우기',
     });
@@ -568,7 +568,7 @@
       },
 
       countdown({ count }) {
-        showOverlay(`<div style="font-size:5rem;color:#fff;text-shadow:0 0 20px rgba(253,211,77,0.5);">${count}</div>`);
+        showOverlay(`<div style="font-size:5rem;color:#1a1a2e;text-shadow:0 0 20px rgba(253,211,77,0.5);">${count}</div>`);
       },
 
       drawStart({ word }) {
@@ -610,7 +610,7 @@
         showOverlay(`
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '🎨'}</div>
           <div style="font-size:1.1rem;color:#fdd34d;margin-top:8px;">게임 종료</div>
-          <div style="font-size:1.8rem;font-weight:bold;margin-top:6px;color:#fff;">점수: ${myScore}</div>
+          <div style="font-size:1.8rem;font-weight:bold;margin-top:6px;color:#1a1a2e;">점수: ${myScore}</div>
           ${isWinner && totalPlayers>1 ? '<div style="color:#4ade80;font-size:0.85rem;margin-top:6px;">🥇 최고 점수!</div>' : ''}
         `);
         if (onGameOver) onGameOver(myScore);

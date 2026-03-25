@@ -106,7 +106,7 @@
     hud.innerHTML = `
       <span id="ns-score-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-lg);color:${playerColor};">0</span>
       <span id="ns-solved-${playerIndex}" style="font-family:var(--font-body);font-size:var(--text-sm);color:#aaa;">0 solved</span>
-      <span id="ns-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#fff;"></span>
+      <span id="ns-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#1a1a2e;"></span>
     `;
     container.appendChild(hud);
 
@@ -142,7 +142,7 @@
     exprEl.style.cssText = `
       font-family: var(--font-display);
       font-size: clamp(1.2rem, 4vmin, 2rem);
-      color: #fff; letter-spacing: 0.05em;
+      color: #1a1a2e; letter-spacing: 0.05em;
       min-height: 1.5em; display: flex; align-items: center; gap: 0.3em;
     `;
     const resultEl = document.createElement('div');
@@ -200,10 +200,10 @@
       btn.style.cssText = `
         min-width: clamp(2.8em, 10vw, 4em);
         height: clamp(2.8em, 10vw, 4em);
-        border: 2px solid rgba(255,255,255,0.2);
+        border: 2px solid rgba(0,0,0,0.2);
         border-radius: 0.6em;
         background: ${bg || 'rgba(255,255,255,0.1)'};
-        color: #fff;
+        color: #1a1a2e;
         font-family: var(--font-display);
         font-size: clamp(1.1rem, 3.5vmin, 2rem);
         cursor: pointer; touch-action: manipulation; user-select: none;
@@ -366,7 +366,7 @@
     function updateHUD() {
       if (scoreEl)     scoreEl.textContent = score;
       if (solvedEl)    solvedEl.textContent = `${puzzlesSolved} solved`;
-      if (timerEl)     { timerEl.textContent = `${timeLeft}s`; timerEl.style.color = timeLeft <= 10 ? '#ff5252' : '#fff'; }
+      if (timerEl)     { timerEl.textContent = `${timeLeft}s`; timerEl.style.color = timeLeft <= 10 ? '#ff5252' : '#1a1a2e'; }
       if (timerBarFill){ timerBarFill.style.width = `${(timeLeft / gameDuration) * 100}%`; }
       timerBarFill.classList.toggle('urgent', timeLeft <= 10);
     }

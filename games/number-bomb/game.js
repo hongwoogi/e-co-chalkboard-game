@@ -49,9 +49,9 @@
       <span id="nb-score-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-lg);color:${playerColor};">0</span>
       <div style="text-align:center;">
         <div style="font-family:var(--font-body);font-size:var(--text-xs);color:#aaa;">두 수의 합</div>
-        <div id="nb-target-${playerIndex}" style="font-family:var(--font-display);font-size:clamp(1.8rem,5vmin,3rem);color:#fff;line-height:1;"></div>
+        <div id="nb-target-${playerIndex}" style="font-family:var(--font-display);font-size:clamp(1.8rem,5vmin,3rem);color:#1a1a2e;line-height:1;"></div>
       </div>
-      <span id="nb-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#fff;"></span>
+      <span id="nb-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#1a1a2e;"></span>
     `;
     container.appendChild(hud);
 
@@ -103,7 +103,7 @@
         display: flex; align-items: center; justify-content: center;
         font-family: var(--font-display);
         font-size: ${size * 0.42}px;
-        color: #fff;
+        color: #1a1a2e;
         cursor: pointer;
         touch-action: manipulation; user-select: none;
         transition: box-shadow 0.1s;
@@ -231,7 +231,7 @@
     /* ── HUD ── */
     function updateHUD() {
       if (scoreEl)     scoreEl.textContent = score;
-      if (timerEl)     { timerEl.textContent = `${timeLeft}s`; timerEl.style.color = timeLeft <= 10 ? '#ff5252' : '#fff'; }
+      if (timerEl)     { timerEl.textContent = `${timeLeft}s`; timerEl.style.color = timeLeft <= 10 ? '#ff5252' : '#1a1a2e'; }
       if (timerBarFill){ timerBarFill.style.width = `${(timeLeft / gameDuration) * 100}%`; }
       const urgent = timeLeft <= 10;
       if (timerBarFill) timerBarFill.classList.toggle('urgent', urgent);

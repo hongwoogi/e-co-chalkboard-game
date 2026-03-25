@@ -65,8 +65,8 @@
     // Timer bar
     const timerWrap = document.createElement('div');
     timerWrap.style.cssText = `
-      flex:1;height:10px;background:rgba(255,255,255,0.1);
-      border:2px solid rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;
+      flex:1;height:10px;background:rgba(0,0,0,0.10);
+      border:2px solid rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;
     `;
     const timerFill = document.createElement('div');
     timerFill.style.cssText = `height:100%;width:100%;background:${playerColor};transition:none;`;
@@ -89,7 +89,7 @@
     const ctrlRow = document.createElement('div');
     ctrlRow.style.cssText = `
       flex-shrink:0;display:flex;gap:8px;padding:8px 10px;
-      background:rgba(0,0,0,0.35);border-top:3px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.35);border-top:3px solid rgba(0,0,0,0.08);
     `;
 
     function makeBtn(label, dir) {

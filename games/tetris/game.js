@@ -39,7 +39,7 @@
     hud.style.cssText = 'width:100%;display:flex;justify-content:space-between;align-items:center;padding:0.3em 0.6em;box-sizing:border-box;flex-shrink:0;';
     hud.innerHTML = `
       <span id="t-score-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-lg);color:${playerColor};">0</span>
-      <span id="t-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#fff;"></span>
+      <span id="t-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#1a1a2e;"></span>
       <span id="t-lines-${playerIndex}" style="font-family:var(--font-body);font-size:var(--text-sm);color:#aaa;">0줄</span>
     `;
     container.appendChild(hud);
@@ -62,8 +62,8 @@
         aspect-ratio: 1;
         border: none;
         border-radius: 0.5em;
-        background: rgba(255,255,255,0.12);
-        color: #fff;
+        background: rgba(0,0,0,0.12);
+        color: #1a1a2e;
         font-size: clamp(1.2rem, 3.5vw, 2rem);
         cursor: pointer;
         touch-action: manipulation;
@@ -241,7 +241,7 @@
 
     function updateTimer() {
       const el = document.getElementById(`t-timer-${playerIndex}`);
-      if (el) { el.textContent = `${timeLeft}s`; el.style.color = timeLeft <= 10 ? '#ff5252' : '#fff'; }
+      if (el) { el.textContent = `${timeLeft}s`; el.style.color = timeLeft <= 10 ? '#ff5252' : '#1a1a2e'; }
     }
 
     function endGame() {

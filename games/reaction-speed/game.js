@@ -116,14 +116,14 @@
     });
 
     const msgEl = el('div', {
-      style: `font-size:1.6rem;font-weight:bold;color:#fff;text-align:center;line-height:1.4;`,
+      style: `font-size:1.6rem;font-weight:bold;color:#1a1a2e;text-align:center;line-height:1.4;`,
       text: '곧 시작해요...',
     });
 
     const tapBtn = el('button', {
       style: `width:80%;max-width:240px;padding:28px 0;font-size:2rem;font-weight:bold;
-              background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.3);
-              border:3px solid rgba(255,255,255,0.12);border-radius:24px;cursor:pointer;
+              background:rgba(0,0,0,0.08);color:rgba(20,20,40,0.3);
+              border:3px solid rgba(0,0,0,0.12);border-radius:24px;cursor:pointer;
               font-family:var(--font-body);transition:all 0.1s;letter-spacing:1px;`,
       text: '탭!',
     });
@@ -146,7 +146,7 @@
       tapBtn.disabled = true;
       tapBtn.style.background = 'rgba(255,255,255,0.08)';
       tapBtn.style.color = 'rgba(255,255,255,0.3)';
-      tapBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+      tapBtn.style.borderColor = 'rgba(0,0,0,0.12)';
       tapBtn.style.boxShadow = 'none';
     }
 
@@ -154,7 +154,7 @@
       container.style.background = '#d4f0d4';
       tapBtn.disabled = false;
       tapBtn.style.background = `linear-gradient(135deg,${playerColor},color-mix(in srgb,${playerColor} 60%,#000))`;
-      tapBtn.style.color = '#fff';
+      tapBtn.style.color = '#1a1a2e';
       tapBtn.style.borderColor = playerColor;
       tapBtn.style.boxShadow = `0 0 40px color-mix(in srgb,${playerColor} 50%,transparent)`;
     }
@@ -187,7 +187,7 @@
       tapBtn.disabled = true;
       showOverlay(`
         <div style="font-size:1rem;color:#888;margin-bottom:8px;">반응속도</div>
-        <div style="font-size:3rem;font-weight:bold;color:#fff;">${ms}ms</div>
+        <div style="font-size:3rem;font-weight:bold;color:#1a1a2e;">${ms}ms</div>
         <div style="font-size:1.5rem;font-weight:bold;color:${result.color};margin-top:8px;">${result.label}</div>
         <div style="font-size:1.2rem;color:${result.color};margin-top:4px;">+${result.pts}점</div>
       `);
@@ -204,7 +204,7 @@
         hideOverlay();
         roundEl.textContent = `${round} / ${totalRounds} 라운드`;
         msgEl.textContent = '초록불이 켜지면\n탭!';
-        msgEl.style.color = '#fff';
+        msgEl.style.color = '#1a1a2e';
         timeEl.textContent = '기다려요...';
       },
 
@@ -239,7 +239,7 @@
         showOverlay(`
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '⚡'}</div>
           <div style="font-size:1rem;color:#fdd34d;margin-top:10px;">게임 종료</div>
-          <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#fff;">총점: ${myScore}</div>
+          <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#1a1a2e;">총점: ${myScore}</div>
           ${isWinner && totalPlayers > 1 ? '<div style="color:#4ade80;font-size:0.85rem;margin-top:8px;">🥇 가장 빠른 반응!</div>' : ''}
         `);
         if (onGameOver) onGameOver(myScore);

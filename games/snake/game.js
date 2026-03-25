@@ -49,7 +49,7 @@
     `;
     hud.innerHTML = `
       <span id="sn-score-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-lg);color:${playerColor};">0</span>
-      <span id="sn-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#fff;"></span>
+      <span id="sn-timer-${playerIndex}" style="font-family:var(--font-display);font-size:var(--text-md);color:#1a1a2e;"></span>
       <span id="sn-len-${playerIndex}" style="font-family:var(--font-body);font-size:var(--text-sm);color:#aaa;">길이: 3</span>
     `;
     container.appendChild(hud);
@@ -83,8 +83,8 @@
       btn.style.cssText = `
         width: 3em; height: 2.6em;
         border: none; border-radius: 0.4em;
-        background: rgba(255,255,255,0.12);
-        color: #fff; font-size: clamp(1rem,3vw,1.6rem);
+        background: rgba(0,0,0,0.12);
+        color: #1a1a2e; font-size: clamp(1rem,3vw,1.6rem);
         cursor: pointer; touch-action: manipulation; user-select: none;
       `;
       const fire = (e) => { e.preventDefault(); action(); };
@@ -205,7 +205,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Grid dots
-      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillStyle = 'rgba(0,0,0,0.04)';
       for (let r = 0; r < GRID; r++)
         for (let c = 0; c < GRID; c++)
           ctx.fillRect(c * cellSize + cellSize / 2 - 1, r * cellSize + cellSize / 2 - 1, 2, 2);
@@ -248,7 +248,7 @@
       const t = document.getElementById(`sn-timer-${playerIndex}`);
       const l = document.getElementById(`sn-len-${playerIndex}`);
       if (s) s.textContent = score;
-      if (t) { t.textContent = `${timeLeft}s`; t.style.color = timeLeft <= 10 ? '#ff5252' : '#fff'; }
+      if (t) { t.textContent = `${timeLeft}s`; t.style.color = timeLeft <= 10 ? '#ff5252' : '#1a1a2e'; }
       if (l) l.textContent = `길이: ${snake.length}`;
     }
 

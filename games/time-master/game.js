@@ -141,7 +141,7 @@
 
     /* Stopwatch digits */
     const swEl = el('div', {
-      style: `font-size:4rem;font-weight:bold;color:#ffffff;
+      style: `font-size:4rem;font-weight:bold;color:#1a1a2e;
               font-family:var(--font-display);letter-spacing:4px;
               text-shadow:0 0 30px rgba(253,211,77,0.3);`,
       text: '0.00',
@@ -154,7 +154,7 @@
       text: '화면 가시성',
     });
     const visTrack = el('div', {
-      style: `height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;`,
+      style: `height:8px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;`,
     });
     const visFill = el('div', {
       style: `height:100%;width:100%;background:#7ed3ff;border-radius:4px;`,
@@ -257,7 +257,7 @@
 
       showOverlay(`
         <div style="font-size:0.8rem;color:#888;margin-bottom:10px;">목표: ${target}초</div>
-        <div style="font-size:2rem;font-weight:bold;color:#fff;margin-bottom:4px;">${elapsed.toFixed(2)}초</div>
+        <div style="font-size:2rem;font-weight:bold;color:#1a1a2e;margin-bottom:4px;">${elapsed.toFixed(2)}초</div>
         <div style="font-size:0.85rem;color:#888;margin-bottom:14px;">${timing} · 오차 ${diff.toFixed(2)}초</div>
         <div style="font-size:1.6rem;font-weight:bold;color:${result.color};">${result.label}</div>
         <div style="font-size:1.3rem;color:${result.color};margin-top:6px;">+${result.pts}점</div>
@@ -331,7 +331,7 @@
         showOverlay(`
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '⏱️'}</div>
           <div style="font-size:1rem;color:#fdd34d;margin-top:10px;">게임 종료</div>
-          <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#fff;">총점: ${myScore}</div>
+          <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#1a1a2e;">총점: ${myScore}</div>
           ${isWinner && totalPlayers > 1 ? '<div style="color:#4ade80;font-size:0.85rem;margin-top:8px;">🥇 시간 지배자!</div>' : ''}
         `);
         if (onGameOver) onGameOver(myScore);

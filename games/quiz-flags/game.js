@@ -103,7 +103,7 @@
     `;
     qArea.innerHTML = `
       <div id="qf-flag" style="line-height:1;display:flex;align-items:center;justify-content:center;"></div>
-      <div id="qf-qtext" style="font-family:var(--font-display);font-size:clamp(1rem,3vmin,1.8rem);color:#fff;text-align:center;"></div>
+      <div id="qf-qtext" style="font-family:var(--font-display);font-size:clamp(1rem,3vmin,1.8rem);color:#1a1a2e;text-align:center;"></div>
       <div id="qf-answer-reveal" style="font-family:var(--font-display);font-size:clamp(1.2rem,3.5vmin,2rem);color:#fdd835;min-height:1.5em;text-align:center;"></div>
     `;
     container.appendChild(qArea);
@@ -145,7 +145,7 @@
         border-radius: 4px;
         flex-shrink: 0;
       `;
-      header.innerHTML = `<span style="color:${color};">${LABELS[p]}</span> <span id="qf-score-${p}" style="color:#fff;">0점</span>`;
+      header.innerHTML = `<span style="color:${color};">${LABELS[p]}</span> <span id="qf-score-${p}" style="color:#1a1a2e;">0점</span>`;
       zone.appendChild(header);
 
       // 2×2 answer grid
@@ -164,10 +164,10 @@
         btn.dataset.choice = ci;
         btn.dataset.playerColor = color;
         btn.style.cssText = `
-          border: 2.5px solid color-mix(in srgb,${color} 50%,rgba(255,255,255,0.1));
+          border: 2.5px solid color-mix(in srgb,${color} 50%,rgba(0,0,0,0.1));
           border-radius: 1.2em;
           background: color-mix(in srgb,${color} 8%,rgba(255,255,255,0.05));
-          color: #fff;
+          color: #1a1a2e;
           font-family: var(--font-display);
           font-size: clamp(1.1rem,3vmin,1.9rem);
           cursor: pointer;
@@ -261,7 +261,7 @@
       playerBtns.forEach(pBtns => pBtns.forEach(btn => {
         const c = btn.dataset.playerColor || '#fff';
         btn.style.background    = `color-mix(in srgb,${c} 8%,rgba(255,255,255,0.05))`;
-        btn.style.borderColor   = `color-mix(in srgb,${c} 50%,rgba(255,255,255,0.1))`;
+        btn.style.borderColor   = `color-mix(in srgb,${c} 50%,rgba(0,0,0,0.1))`;
         btn.style.opacity       = '1';
         btn.style.pointerEvents = '';
         btn.style.transform     = '';
@@ -369,7 +369,7 @@
             b.style.pointerEvents = '';
           });
           btn.style.background  = 'rgba(255,255,255,0.08)';
-          btn.style.borderColor = 'rgba(255,255,255,0.2)';
+          btn.style.borderColor = 'rgba(0,0,0,0.2)';
         }, 2000);
         // Resume q timer
         qTimerH = setInterval(() => {

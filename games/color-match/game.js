@@ -224,7 +224,7 @@
           width: clamp(3.5rem, 14vw, 6rem);
           height: clamp(3.5rem, 14vw, 6rem);
           border-radius: var(--radius-full);
-          border: 3px solid rgba(255,255,255,0.2);
+          border: 3px solid rgba(0,0,0,0.2);
           background: ${color.hex};
           cursor: pointer;
           touch-action: manipulation;

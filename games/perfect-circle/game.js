@@ -294,7 +294,7 @@
         showOverlay(`
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '⭕'}</div>
           <div style="font-size:1rem;color:#fdd34d;margin-top:10px;">게임 종료</div>
-          <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#fff;">총점: ${myScore}</div>
+          <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#1a1a2e;">총점: ${myScore}</div>
           ${isWinner && totalPlayers > 1 ? '<div style="color:#4ade80;font-size:0.85rem;margin-top:8px;">🥇 원의 달인!</div>' : ''}
         `);
         if (onGameOver) onGameOver(myScore);

@@ -103,7 +103,7 @@
       border-radius: 2em;
       border: 2px solid ${playerColor};
       background: ${playerColor};
-      color: #fff;
+      color: #1a1a2e;
       font-size: var(--text-xs);
       cursor: pointer;
       touch-action: manipulation;
@@ -129,13 +129,13 @@
       if (flagMode) {
         modeRevealBtn.style.background = 'transparent';
         modeRevealBtn.style.color = 'var(--on-surface-variant)';
-        modeRevealBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+        modeRevealBtn.style.borderColor = 'rgba(0,0,0,0.2)';
         modeFlagBtn.style.background = '#ef5350';
-        modeFlagBtn.style.color = '#fff';
+        modeFlagBtn.style.color = '#1a1a2e';
         modeFlagBtn.style.borderColor = '#ef5350';
       } else {
         modeRevealBtn.style.background = playerColor;
-        modeRevealBtn.style.color = '#fff';
+        modeRevealBtn.style.color = '#1a1a2e';
         modeRevealBtn.style.borderColor = playerColor;
         modeFlagBtn.style.background = 'transparent';
         modeFlagBtn.style.color = 'var(--on-surface-variant)';
