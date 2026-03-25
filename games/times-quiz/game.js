@@ -39,7 +39,33 @@
     let answerRevealed = false;
     let questionNum   = 0;
 
-    const pool = [...FACTS].sort(() => Math.random() - 0.5);
+    // Build question pool based on grade scope
+    const scope = window.GradeScope?.get(
+      window._gameSettings?.grade,
+      window._gameSettings?.semester
+    );
+    let pool;
+    if (scope && !scope.ops.includes('×')) {
+      // No multiplication yet — use addition/subtraction
+      const facts = [];
+      const cap = Math.min(scope.maxNum, 20);
+      for (let a = 1; a <= cap; a++) {
+        for (let b = 1; b <= cap; b++) {
+          if (scope.ops.includes('+')) facts.push({ q: `${a} + ${b}`, answer: a + b });
+          if (scope.ops.includes('-') && a > b) facts.push({ q: `${a} - ${b}`, answer: a - b });
+        }
+      }
+      pool = facts.sort(() => Math.random() - 0.5);
+    } else if (scope && scope.tables && scope.tables.length) {
+      // Multiplication with scoped tables
+      const facts = [];
+      scope.tables.forEach(a => {
+        for (let b = 2; b <= 9; b++) facts.push({ q: `${a} × ${b}`, answer: a * b });
+      });
+      pool = facts.sort(() => Math.random() - 0.5);
+    } else {
+      pool = [...FACTS].sort(() => Math.random() - 0.5);
+    }
     let poolIdx = 0;
 
     /* ── Build UI ── */

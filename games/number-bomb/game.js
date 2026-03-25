@@ -78,15 +78,24 @@
     /* ── Helpers ── */
     const COLORS = ['#ef5350','#ff7043','#fdd835','#66bb6a','#29b6f6','#ab47bc','#f472b6','#4db6ac'];
 
+    // Grade scope for number range
+    const _scope = window.GradeScope?.get(
+      window._gameSettings?.grade,
+      window._gameSettings?.semester
+    );
+    const _bubbleMax = _scope ? Math.min(_scope.maxNum, 9) : 9;
+    const _targetMin = _scope ? Math.max(2, _bubbleMax - 3) : 5;
+    const _targetRange = _scope ? Math.min(_bubbleMax * 2 - 1, 18) : 18;
+
     function newTarget() {
-      // Pick a target 5-18 that allows at least 2 pairs from numbers 1-9
-      target = 5 + Math.floor(Math.random() * 14);
+      // Pick a target that allows pairs from the bubble range
+      target = _targetMin + Math.floor(Math.random() * (_targetRange - _targetMin + 1));
       if (targetEl) targetEl.textContent = target;
     }
 
     function spawnBubble() {
       if (isGameOver) return;
-      const value = 1 + Math.floor(Math.random() * 9);
+      const value = 1 + Math.floor(Math.random() * _bubbleMax);
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
       const W = arena.clientWidth || 300;
       const size = Math.max(44, Math.min(W * 0.14, 72));

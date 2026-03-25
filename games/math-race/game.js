@@ -234,28 +234,50 @@
 
     /** Generate question based on current progress (difficulty). */
     function generateQuestion() {
-      const p = progress;
+      const scope = window.GradeScope?.get(
+        window._gameSettings?.grade,
+        window._gameSettings?.semester
+      );
+
       let a, b, answer, questionStr, op;
 
-      if (p < 3) {
-        // Easy: simple addition 1-10
-        op = '+';
-        a = randInt(1, 10); b = randInt(1, 10);
-        answer = a + b; questionStr = `${a} + ${b} = ?`;
-      } else if (p < 6) {
-        // Medium: addition/subtraction up to 20
-        op = Math.random() < 0.5 ? '+' : '-';
+      if (scope) {
+        // Grade-scope mode
+        op = scope.ops[Math.floor(Math.random() * scope.ops.length)];
+        const cap = Math.min(scope.maxNum, 30);
         if (op === '+') {
-          a = randInt(5, 20); b = randInt(1, 15);
+          a = randInt(1, cap); b = randInt(1, cap);
           answer = a + b; questionStr = `${a} + ${b} = ?`;
-        } else {
-          a = randInt(10, 25); b = randInt(1, a);
+        } else if (op === '-') {
+          a = randInt(2, cap + 5); b = randInt(1, Math.max(1, a - 1));
           answer = a - b; questionStr = `${a} - ${b} = ?`;
+        } else if (op === '×') {
+          a = randInt(2, 9); b = randInt(2, 9);
+          answer = a * b; questionStr = `${a} × ${b} = ?`;
+        } else { // ÷
+          b = randInt(2, 9); a = b * randInt(2, 9);
+          answer = a / b; questionStr = `${a} ÷ ${b} = ?`;
         }
       } else {
-        // Hard: multiplication small tables
-        a = randInt(2, 9); b = randInt(2, 9);
-        answer = a * b; questionStr = `${a} × ${b} = ?`;
+        // Auto mode: scale with progress
+        const p = progress;
+        if (p < 3) {
+          op = '+';
+          a = randInt(1, 10); b = randInt(1, 10);
+          answer = a + b; questionStr = `${a} + ${b} = ?`;
+        } else if (p < 6) {
+          op = Math.random() < 0.5 ? '+' : '-';
+          if (op === '+') {
+            a = randInt(5, 20); b = randInt(1, 15);
+            answer = a + b; questionStr = `${a} + ${b} = ?`;
+          } else {
+            a = randInt(10, 25); b = randInt(1, a);
+            answer = a - b; questionStr = `${a} - ${b} = ?`;
+          }
+        } else {
+          a = randInt(2, 9); b = randInt(2, 9);
+          answer = a * b; questionStr = `${a} × ${b} = ?`;
+        }
       }
 
       // 3 wrong answers

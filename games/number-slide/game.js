@@ -65,17 +65,29 @@
     return [...found];
   }
 
-  function generatePuzzle() {
+  function generatePuzzleWithOps(availOps, numMax) {
     for (let attempt = 0; attempt < 200; attempt++) {
-      const nums = Array.from({ length: 4 }, () => 1 + Math.floor(Math.random() * 9));
-      const achievable = getAchievableTargets(nums);
-      if (achievable.length === 0) continue;
-      // Prefer 24 if achievable
-      const target = achievable.includes(24) ? 24 : achievable[Math.floor(Math.random() * achievable.length)];
+      const nums = Array.from({ length: 4 }, () => 1 + Math.floor(Math.random() * numMax));
+      // Find achievable targets using only availOps
+      const found = new Set();
+      for (const perm of permutations(nums)) {
+        for (const op1 of availOps) for (const op2 of availOps) for (const op3 of availOps) {
+          const r1 = calc(perm[0], op1, perm[1]);
+          const r2 = calc(r1, op2, perm[2]);
+          const r3 = calc(r2, op3, perm[3]);
+          if (isFinite(r3) && r3 > 0 && r3 === Math.floor(r3) && r3 <= 100) found.add(r3);
+        }
+      }
+      if (found.size === 0) continue;
+      const achievable = [...found];
+      const want24 = availOps.includes('×') && achievable.includes(24);
+      const target = want24 ? 24 : achievable[Math.floor(Math.random() * achievable.length)];
       return { nums, target };
     }
-    // Fallback safe puzzle
-    return { nums: [3, 8, 2, 4], target: 24 }; // 3×8=24, etc.
+    // Fallback
+    const a = 1 + Math.floor(Math.random() * numMax);
+    const b = 1 + Math.floor(Math.random() * numMax);
+    return { nums: [a, b, 1, 1], target: a + b };
   }
 
   /* ── Game ── */
@@ -89,6 +101,17 @@
     let expr = [];        // alternating: [num, op, num, op, num, op, num]
     let usedIndices = []; // which of the 4 nums are used
     let puzzlesSolved = 0;
+
+    // Grade scope: restrict available operators
+    const _scope = window.GradeScope?.get(
+      window._gameSettings?.grade,
+      window._gameSettings?.semester
+    );
+    const _availOps = _scope ? _scope.ops : OPS;
+
+    function generatePuzzle() {
+      return generatePuzzleWithOps(_availOps, _scope ? Math.min(_scope.maxNum, 9) : 9);
+    }
 
     /* ── Build UI ── */
     container.innerHTML = '';
@@ -330,8 +353,8 @@
       renderExpr();
     }
 
-    /* ── Operator buttons ── */
-    OPS.forEach(op => {
+    /* ── Operator buttons (grade-scoped) ── */
+    _availOps.forEach(op => {
       opsRow.appendChild(makeTile(op, 'rgba(253,216,53,0.15)', () => tapOp(op)));
     });
 

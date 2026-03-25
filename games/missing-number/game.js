@@ -14,8 +14,19 @@
 
   /* ── Question generator ─────────────────────────────────────── */
   function makeQuestion(roundNum) {
+    const scope = window.GradeScope?.get(
+      window._gameSettings?.grade,
+      window._gameSettings?.semester
+    );
+
     let step, start;
-    if (roundNum <= 3) {
+    if (scope) {
+      // Grade-scope mode
+      const steps = scope.seqSteps;
+      step = pick(steps);
+      const maxStart = Math.max(1, Math.floor((scope.seqMax - step * 3) / step));
+      start = rnd(1, maxStart) * step;
+    } else if (roundNum <= 3) {
       step  = 1;
       start = rnd(1, 7);
     } else if (roundNum <= 7) {

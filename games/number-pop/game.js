@@ -203,28 +203,45 @@
 
     /** Generate a question and 4 bubble values. */
     function generateQuestion() {
-      const tier = getCurrentTier();
-      const op   = tier.ops[Math.floor(Math.random() * tier.ops.length)];
-      const [min, max] = tier.range;
+      const scope = window.GradeScope?.get(
+        window._gameSettings?.grade,
+        window._gameSettings?.semester
+      );
 
-      let a, b, answer, questionStr;
+      let op, a, b, answer, questionStr;
 
-      if (op === '+') {
-        a = randInt(min, max);
-        b = randInt(min, max);
-        answer = a + b;
-        questionStr = `${a} + ${b} = ?`;
-      } else if (op === '-') {
-        // Ensure answer is always positive
-        a = randInt(min + 5, max + 5);
-        b = randInt(min, a);
-        answer = a - b;
-        questionStr = `${a} - ${b} = ?`;
-      } else if (op === '×') {
-        a = randInt(2, 9);
-        b = randInt(2, 9);
-        answer = a * b;
-        questionStr = `${a} × ${b} = ?`;
+      if (scope) {
+        // Grade-scope mode: use curriculum-appropriate numbers
+        op = scope.ops[Math.floor(Math.random() * scope.ops.length)];
+        const cap = Math.min(scope.maxNum, 20);
+        if (op === '+') {
+          a = randInt(1, cap); b = randInt(1, cap);
+          answer = a + b; questionStr = `${a} + ${b} = ?`;
+        } else if (op === '-') {
+          a = randInt(2, cap + 3); b = randInt(1, Math.max(1, a - 1));
+          answer = a - b; questionStr = `${a} - ${b} = ?`;
+        } else if (op === '×') {
+          a = randInt(2, 9); b = randInt(2, 9);
+          answer = a * b; questionStr = `${a} × ${b} = ?`;
+        } else { // ÷
+          b = randInt(2, 9); a = b * randInt(2, 9);
+          answer = a / b; questionStr = `${a} ÷ ${b} = ?`;
+        }
+      } else {
+        // Auto mode: tier-based difficulty
+        const tier = getCurrentTier();
+        op = tier.ops[Math.floor(Math.random() * tier.ops.length)];
+        const [min, max] = tier.range;
+        if (op === '+') {
+          a = randInt(min, max); b = randInt(min, max);
+          answer = a + b; questionStr = `${a} + ${b} = ?`;
+        } else if (op === '-') {
+          a = randInt(min + 5, max + 5); b = randInt(min, a);
+          answer = a - b; questionStr = `${a} - ${b} = ?`;
+        } else if (op === '×') {
+          a = randInt(2, 9); b = randInt(2, 9);
+          answer = a * b; questionStr = `${a} × ${b} = ?`;
+        }
       }
 
       // Generate 3 wrong answers (distinct from correct, distinct from each other)

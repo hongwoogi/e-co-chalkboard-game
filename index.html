@@ -230,17 +230,37 @@
     ══════════════════════════════════════ */
     .top-bar {
       display: none;
+      flex-direction: column;
       position: relative;
       z-index: 10;
       flex-shrink: 0;
+      height: auto;
+      background: #fff8ef;
+      border-bottom: 2px solid rgba(200,160,110,0.18);
+    }
+    .top-r1 {
+      display: flex;
       align-items: center;
       gap: 0.4rem;
       padding: 0 clamp(0.8rem, 2vw, 1.2rem);
-      height: 56px;
-      background: #fff8ef;
-      border-bottom: 2px solid rgba(200,160,110,0.18);
+      height: 48px;
       overflow-x: auto;
       white-space: nowrap;
+    }
+    .top-r2 {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem clamp(0.8rem, 2vw, 1.2rem) 0.28rem;
+      border-top: 1px solid rgba(200,160,110,0.15);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .top-label-m {
+      font-family: var(--font-body);
+      font-size: 0.68rem;
+      color: #b08060;
+      flex-shrink: 0;
     }
     .top-logo-m {
       font-family: var(--font-display);
@@ -978,6 +998,24 @@
             <button class="chip" data-time="100">100초</button>
           </div>
 
+          <div class="settings-divider"></div>
+
+          <span class="settings-label">📚 학년</span>
+          <div class="chip-group" id="grade-chips" style="display:flex;flex-wrap:wrap;gap:4px;width:100%;">
+            <button class="chip" data-grade="1">1</button>
+            <button class="chip" data-grade="2">2</button>
+            <button class="chip" data-grade="3">3</button>
+            <button class="chip" data-grade="4">4</button>
+            <button class="chip" data-grade="5">5</button>
+            <button class="chip" data-grade="6">6</button>
+          </div>
+
+          <span class="settings-label">📖 학기</span>
+          <div class="chip-group" id="semester-chips" style="display:flex;flex-wrap:nowrap;width:100%;">
+            <button class="chip active" data-semester="1">1</button>
+            <button class="chip" data-semester="2">2</button>
+          </div>
+
           <!--
           <div class="settings-divider"></div>
 
@@ -1020,22 +1058,41 @@
 
       <!-- ── MOBILE TOP BAR ── -->
       <div class="top-bar">
-        <span class="top-logo-m">🎮</span>
-        <div class="top-vr"></div>
-        <div class="chip-row" id="player-chips-m">
-          <button class="chip active" data-count="1">1</button>
-          <button class="chip" data-count="2">2</button>
-          <button class="chip" data-count="3">3</button>
-          <button class="chip" data-count="4">4</button>
+        <div class="top-r1">
+          <span class="top-logo-m">🎮</span>
+          <div class="top-vr"></div>
+          <div class="chip-row" id="player-chips-m">
+            <button class="chip active" data-count="1">1</button>
+            <button class="chip" data-count="2">2</button>
+            <button class="chip" data-count="3">3</button>
+            <button class="chip" data-count="4">4</button>
+          </div>
+          <div class="top-vr"></div>
+          <div class="chip-row" id="time-chips-m">
+            <button class="chip" data-time="30">30s</button>
+            <button class="chip active" data-time="60">1m</button>
+            <button class="chip" data-time="100">100s</button>
+          </div>
+          <div class="top-spacer"></div>
+          <button id="btn-start-mobile">▶ 시작!</button>
         </div>
-        <div class="top-vr"></div>
-        <div class="chip-row" id="time-chips-m">
-          <button class="chip" data-time="30">30s</button>
-          <button class="chip active" data-time="60">1m</button>
-          <button class="chip" data-time="100">100s</button>
+        <div class="top-r2">
+          <span class="top-label-m">학년</span>
+          <div class="chip-row" id="grade-chips-m">
+            <button class="chip" data-grade="1">1</button>
+            <button class="chip" data-grade="2">2</button>
+            <button class="chip" data-grade="3">3</button>
+            <button class="chip" data-grade="4">4</button>
+            <button class="chip" data-grade="5">5</button>
+            <button class="chip" data-grade="6">6</button>
+          </div>
+          <div class="top-vr"></div>
+          <span class="top-label-m">학기</span>
+          <div class="chip-row" id="semester-chips-m">
+            <button class="chip active" data-semester="1">1</button>
+            <button class="chip" data-semester="2">2</button>
+          </div>
         </div>
-        <div class="top-spacer"></div>
-        <button id="btn-start-mobile">▶ 시작!</button>
       </div>
 
       <!-- ── GAME GRID ── -->
@@ -1391,6 +1448,7 @@
 
   </div><!-- /stage -->
 
+  <script src="js/grade-scope.js?v=20260325"></script>
   <script src="js/sound-engine.js?v=20260326"></script>
   <script src="js/leaderboard.js?v=20260325b"></script>
   <script src="js/visitor-counter.js?v=20260325"></script>
@@ -1400,10 +1458,12 @@
   <script>
     (function() {
       /* ── State ── */
-      let selectedCount  = 1;
-      let selectedLayout = '4-strips';
-      let selectedGame   = 'number-pop';
-      let selectedTime   = 60;
+      let selectedCount    = 1;
+      let selectedLayout   = '4-strips';
+      let selectedGame     = 'number-pop';
+      let selectedTime     = 60;
+      let selectedGrade    = null;   // null = auto (no grade filter)
+      let selectedSemester = 1;
 
       // Pre-initialize difficulties
       window._gameSettings = { duration: 60, playerCount: 1, difficulties: {} };
@@ -1453,6 +1513,33 @@
       }
       document.querySelectorAll('#time-chips .chip, #time-chips-m .chip').forEach(chip => {
         chip.addEventListener('click', () => onTimeChange(chip));
+      });
+
+      /* ── Grade chips (synced, toggle) ── */
+      function onGradeChange(chip) {
+        const g = parseInt(chip.dataset.grade);
+        if (selectedGrade === g) {
+          selectedGrade = null;  // toggle off → auto difficulty
+        } else {
+          selectedGrade = g;
+        }
+        document.querySelectorAll('#grade-chips .chip, #grade-chips-m .chip').forEach(c => {
+          c.classList.toggle('active', parseInt(c.dataset.grade) === selectedGrade);
+        });
+      }
+      document.querySelectorAll('#grade-chips .chip, #grade-chips-m .chip').forEach(chip => {
+        chip.addEventListener('click', () => onGradeChange(chip));
+      });
+
+      /* ── Semester chips (synced) ── */
+      function onSemesterChange(chip) {
+        selectedSemester = parseInt(chip.dataset.semester);
+        document.querySelectorAll('#semester-chips .chip, #semester-chips-m .chip').forEach(c => {
+          c.classList.toggle('active', parseInt(c.dataset.semester) === selectedSemester);
+        });
+      }
+      document.querySelectorAll('#semester-chips .chip, #semester-chips-m .chip').forEach(chip => {
+        chip.addEventListener('click', () => onSemesterChange(chip));
       });
 
       /* ── Game card tap ── */
@@ -1510,7 +1597,7 @@
         const tmInfo = window.TournamentManager?.getCurrentMatchInfo?.();
         const effectiveCount = tmInfo ? Math.max(1, tmInfo.players.length) : selectedCount;
 
-        window._gameSettings = { duration: selectedTime, playerCount: effectiveCount, difficulties: _prevDiffs || {} };
+        window._gameSettings = { duration: selectedTime, playerCount: effectiveCount, difficulties: _prevDiffs || {}, grade: selectedGrade, semester: selectedSemester };
         window._lastGameConfig = { selectedCount: effectiveCount, variant, selectedGame };
 
         const game      = window.getGameById(selectedGame);
