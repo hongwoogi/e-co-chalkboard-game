@@ -179,11 +179,11 @@
           align-items: center;
           justify-content: center;
           border-radius: clamp(4px, 1vmin, 10px);
-          background: var(--surface-container-high);
-          border: 2px solid var(--outline-variant);
+          background: color-mix(in srgb,${playerColor} 15%,#f0ece5);
+          border: 2px solid color-mix(in srgb,${playerColor} 45%,#c8b89a);
           font-family: var(--font-display);
           font-size: clamp(0.9rem, 3vmin, 2rem);
-          color: var(--on-surface);
+          color: #3d2b1f;
           cursor: pointer;
           user-select: none;
           touch-action: manipulation;
@@ -200,8 +200,8 @@
           if (num === nextTarget) {
             // Correct!
             cell.found = true;
-            el.style.background   = playerColor.startsWith('var') ? 'var(--primary)' : playerColor;
-            el.style.borderColor  = 'transparent';
+            el.style.background   = `color-mix(in srgb,${playerColor} 70%,#f0ece5)`;
+            el.style.borderColor  = playerColor;
             el.style.color        = '#1a1a2e';
             el.style.transform    = 'scale(1.15)';
             setTimeout(() => { el.style.transform = ''; }, 200);
