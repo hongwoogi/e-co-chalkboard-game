@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Gamepad body -->
+  <rect x="4" y="18" width="56" height="30" rx="14" ry="14" fill="#e8630a"/>
+  <!-- Left grip -->
+  <ellipse cx="14" cy="44" rx="10" ry="8" fill="#e8630a"/>
+  <!-- Right grip -->
+  <ellipse cx="50" cy="44" rx="10" ry="8" fill="#e8630a"/>
+
+  <!-- Body outline for depth -->
+  <rect x="4" y="18" width="56" height="30" rx="14" ry="14" fill="none" stroke="#3d2b1f" stroke-width="2.5"/>
+  <ellipse cx="14" cy="44" rx="10" ry="8" fill="none" stroke="#3d2b1f" stroke-width="2.5"/>
+  <ellipse cx="50" cy="44" rx="10" ry="8" fill="none" stroke="#3d2b1f" stroke-width="2.5"/>
+
+  <!-- D-pad (left side) -->
+  <!-- Horizontal bar -->
+  <rect x="11" y="26" width="12" height="5" rx="2" fill="#3d2b1f"/>
+  <!-- Vertical bar -->
+  <rect x="15.5" y="22" width="5" height="13" rx="2" fill="#3d2b1f"/>
+
+  <!-- Action buttons (right side) -->
+  <!-- Top button -->
+  <circle cx="43" cy="24" r="3.2" fill="#fff8ef" stroke="#3d2b1f" stroke-width="1.5"/>
+  <!-- Right button -->
+  <circle cx="49" cy="29" r="3.2" fill="#fff8ef" stroke="#3d2b1f" stroke-width="1.5"/>
+  <!-- Bottom button -->
+  <circle cx="43" cy="34" r="3.2" fill="#fff8ef" stroke="#3d2b1f" stroke-width="1.5"/>
+  <!-- Left button -->
+  <circle cx="37" cy="29" r="3.2" fill="#fff8ef" stroke="#3d2b1f" stroke-width="1.5"/>
+
+  <!-- Center buttons (select/start) -->
+  <rect x="26" y="29" width="5" height="3.5" rx="1.5" fill="#3d2b1f"/>
+  <rect x="33" y="29" width="5" height="3.5" rx="1.5" fill="#3d2b1f"/>
+</svg>
