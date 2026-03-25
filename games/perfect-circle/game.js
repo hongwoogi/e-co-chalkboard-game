@@ -200,7 +200,7 @@
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.strokeStyle = playerColor;
-      ctx.lineWidth   = 3;
+      ctx.lineWidth   = 5;
       ctx.lineCap = ctx.lineJoin = 'round';
     }
 

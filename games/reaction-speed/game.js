@@ -144,10 +144,10 @@
     function setWaiting() {
       container.style.background = '#f7f3ee';
       tapBtn.disabled = true;
-      tapBtn.style.background = 'rgba(255,255,255,0.08)';
-      tapBtn.style.color = 'rgba(255,255,255,0.3)';
-      tapBtn.style.borderColor = 'rgba(0,0,0,0.12)';
-      tapBtn.style.boxShadow = 'none';
+      tapBtn.style.background = 'rgba(0,0,0,0.07)';
+      tapBtn.style.color = 'rgba(0,0,0,0.3)';
+      tapBtn.style.borderColor = 'rgba(0,0,0,0.15)';
+      tapBtn.style.boxShadow = '0 5px 0 rgba(0,0,0,0.2)';
     }
 
     function setFlash() {

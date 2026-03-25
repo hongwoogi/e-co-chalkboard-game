@@ -153,9 +153,9 @@
         const btn = document.createElement('button');
         btn.dataset.playerColor = color;
         btn.style.cssText = `
-          border: 2.5px solid color-mix(in srgb,${color} 50%,rgba(0,0,0,0.1));
+          border: 2.5px solid color-mix(in srgb,${color} 80%,#555);
           border-radius: 1.2em;
-          background: color-mix(in srgb,${color} 8%,rgba(255,255,255,0.05));
+          background: color-mix(in srgb,${color} 35%,#f0ece5);
           color: #1a1a2e;
           font-family: var(--font-display);
           font-size: clamp(1.1rem,3vmin,1.9rem);
@@ -231,8 +231,8 @@
 
       playerBtns.forEach(pBtns => pBtns.forEach(btn => {
         const c = btn.dataset.playerColor || '#fff';
-        btn.style.background    = `color-mix(in srgb,${c} 8%,rgba(255,255,255,0.05))`;
-        btn.style.borderColor   = `color-mix(in srgb,${c} 50%,rgba(0,0,0,0.1))`;
+        btn.style.background = `color-mix(in srgb,${c} 35%,#f0ece5)`;
+        btn.style.borderColor = `color-mix(in srgb,${c} 80%,#555)`;
         btn.style.opacity       = '1';
         btn.style.pointerEvents = '';
         btn.style.transform     = '';

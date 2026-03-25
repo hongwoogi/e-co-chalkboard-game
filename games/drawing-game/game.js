@@ -101,7 +101,7 @@
 
   function renderStrokesOnCanvas(strokes, canvas) {
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#1a1a2e';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (!strokes?.length) return;
     let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity;

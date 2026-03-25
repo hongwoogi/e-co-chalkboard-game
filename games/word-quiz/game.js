@@ -272,7 +272,7 @@
           padding: clamp(0.6rem, 2vh, 1.2rem) var(--space-sm);
           border-radius: var(--radius-lg);
           border: 2px solid ${COLORS[i]}44;
-          background: color-mix(in srgb, ${COLORS[i]} 15%, var(--surface-container-high));
+          background: color-mix(in srgb, ${COLORS[i]} 40%, #f0ece5);
           color: var(--on-surface);
           font-family: var(--font-display);
           font-size: clamp(1.3rem, 4.5vw, 2.5rem);
