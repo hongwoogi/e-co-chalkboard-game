@@ -173,7 +173,7 @@
         const r  = Math.min(canvas.width, canvas.height) * 0.32;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
         ctx.lineWidth = 1;
         ctx.setLineDash([6, 8]);
         ctx.stroke();
@@ -200,7 +200,7 @@
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.strokeStyle = playerColor;
-      ctx.lineWidth   = 5;
+      ctx.lineWidth   = 6;
       ctx.lineCap = ctx.lineJoin = 'round';
     }
 
@@ -237,7 +237,7 @@
       /* Draw the ideal circle */
       ctx.beginPath();
       ctx.arc(result.cx, result.cy, result.rAvg, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(253,211,77,0.5)';
+      ctx.strokeStyle = 'rgba(253,211,77,0.85)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([5, 6]);
       ctx.stroke();

@@ -53,7 +53,7 @@
     hud.style.cssText = `
       flex-shrink:0;display:flex;align-items:center;gap:8px;
       padding:6px 10px;background:rgba(0,0,0,0.45);
-      border-bottom:3px solid ${playerColor}55;
+      border-bottom:3px solid ${playerColor}88;
     `;
     const scoreEl = document.createElement('span');
     scoreEl.style.cssText = `
@@ -97,7 +97,7 @@
       btn.textContent = label;
       btn.style.cssText = `
         flex:1;padding:12px 0;font-size:1.8rem;font-weight:bold;cursor:pointer;
-        background:color-mix(in srgb,${playerColor} 18%,rgba(0,0,0,0.5));
+        background:color-mix(in srgb,${playerColor} 40%,#f0ece5);
         color:${playerColor};border:3px solid ${playerColor};border-radius:12px;
         box-shadow:0 5px 0 rgba(0,0,0,0.55);
         transition:transform 0.07s,box-shadow 0.07s;

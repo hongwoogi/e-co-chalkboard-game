@@ -98,7 +98,7 @@
     }
     const coord = window._ReactionCoord;
 
-    let myScore = 0, phase = 'waiting', dead = false, tooEarly = false;
+    let myScore = 0, phase = 'waiting', dead = false, tooEarly = false, enabledAt = 0;
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
@@ -153,6 +153,7 @@
     function setFlash() {
       container.style.background = '#d4f0d4';
       tapBtn.disabled = false;
+      enabledAt = performance.now();
       tapBtn.style.background = `linear-gradient(135deg,${playerColor},color-mix(in srgb,${playerColor} 60%,#000))`;
       tapBtn.style.color = '#1a1a2e';
       tapBtn.style.borderColor = playerColor;
@@ -176,6 +177,8 @@
         return;
       }
       if (phase !== 'flash' || dead) return;
+      /* Ignore accidental taps within 80ms of the button being enabled */
+      if (performance.now() - enabledAt < 80) return;
 
       const ms = Date.now() - coord.getFlashedAt();
       const result = calcScore(ms);
