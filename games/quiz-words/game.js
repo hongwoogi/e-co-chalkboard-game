@@ -90,7 +90,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.3em 0.8em;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.05);
       flex-shrink: 0;
     `;
     topBar.innerHTML = `
@@ -125,7 +125,7 @@
       min-height: 0;
       gap: 3px;
       padding: 3px;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.06);
     `;
     container.appendChild(zonesRow);
 
@@ -140,7 +140,7 @@
       header.style.cssText = `
         text-align:center;font-family:var(--font-display);
         font-size:clamp(0.8rem,2.5vmin,1.3rem);padding:0.2em;
-        background:color-mix(in srgb,${color} 20%,rgba(0,0,0,0.5));border-radius:4px;flex-shrink:0;
+        background:color-mix(in srgb,${color} 30%,#f0ece5);border-radius:4px;flex-shrink:0;
       `;
       header.innerHTML = `<span style="color:${color};">${LABELS[p]}</span> <span id="qw-score-${p}" style="color:#1a1a2e;">0점</span>`;
       zone.appendChild(header);

@@ -590,3 +590,17 @@
     color: var(--on-surface-variant);
     border: 1px solid var(--outline-variant);
 }
+
+/* ─────────────────────────────────────────────
+   MOBILE TOUCH TARGETS
+   Ensure interactive elements meet minimum tap size on mobile.
+   ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+    button {
+        min-height: 44px;
+    }
+    /* Game panel content: allow vertical scroll on very small screens */
+    .panel-content {
+        overflow-y: auto;
+    }
+}

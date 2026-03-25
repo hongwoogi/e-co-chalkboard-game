@@ -351,3 +351,32 @@
         display: none; /* hide text label, keep icon only */
     }
 }
+
+/* ─────────────────────────────────────────────
+   MOBILE: portrait phones (≤ 600px)
+   Stack 2-player and 3-player panels vertically
+   so each panel gets more height.
+   ───────────────────────────────────────────── */
+@media (max-width: 600px) {
+    #game-container[data-layout="2"],
+    #game-container[data-layout="3"] {
+        flex-direction: column;
+    }
+
+    /* In vertical stack each panel needs a min height */
+    #game-container[data-layout="2"] .player-panel {
+        min-height: 45vh;
+    }
+    #game-container[data-layout="3"] .player-panel {
+        min-height: 30vh;
+    }
+
+    /* Panel header: bigger touch target */
+    .panel-header {
+        height: clamp(2.4rem, 6%, 3.2rem);
+    }
+    .panel-back-btn {
+        min-height: 2rem;
+        min-width: 2rem;
+    }
+}
