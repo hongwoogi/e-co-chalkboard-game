@@ -27,7 +27,7 @@
       'quiz-flags':   '국기 퀴즈',    'quiz-words':   '영어 단어',
       'drawing-game': '빨리 그리기',  'time-master':  '시간 지배자',
       'reaction-speed': '반응속도',   'perfect-circle': '완벽한 원',
-      'infinite-stairs': '무한의 계단',
+      'missing-number':  '빠진 수 찾기',    'infinite-stairs': '무한의 계단',
     };
   }
 

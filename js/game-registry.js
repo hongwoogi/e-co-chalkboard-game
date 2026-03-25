@@ -17,6 +17,17 @@
 
 const GAMES = [
   {
+    id:          'missing-number',
+    name:        '빠진 수 찾기',
+    icon:        '🔢',
+    description: '수열에서 빠진 숫자를 찾아요! 1→2→?→4 어떤 수일까요?',
+    color:       '#f59e0b',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'missing-number/game.js',
+  },
+  {
     id:          'infinite-stairs',
     name:        '무한의 계단',
     icon:        '🪜',
