@@ -596,7 +596,12 @@
    Ensure interactive elements meet minimum tap size on mobile.
    ───────────────────────────────────────────── */
 @media (max-width: 640px) {
-    button {
+    /* Target tap-able controls but not small picker/label buttons */
+    .panel-back-btn,
+    #btn-start-mobile,
+    #btn-back-home,
+    #btn-tournament,
+    #btn-leaderboard {
         min-height: 44px;
     }
     /* Game panel content: allow vertical scroll on very small screens */

@@ -267,7 +267,8 @@ const LayoutManager = (() => {
       btn.style.cssText = `
         width: 85%;
         max-width: 280px;
-        padding: var(--space-sm) var(--space-md);
+        min-height: auto;
+        padding: var(--space-xs) var(--space-md);
         border-radius: var(--radius-lg);
         border: 2px solid ${stored && stored.id === diff.id ? 'var(--panel-color)' : 'rgba(255,255,255,0.2)'};
         background: ${stored && stored.id === diff.id ? 'rgba(255,255,255,0.1)' : 'transparent'};
