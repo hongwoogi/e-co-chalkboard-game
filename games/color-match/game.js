@@ -1,283 +1,291 @@
 'use strict';
 /**
  * games/color-match/game.js
- * "색깔 맞추기" — 나무블럭 지우기
+ * "잉크 색깔" — Stroop Effect
  *
- * Gameplay:
- *  A stack of colored wooden blocks (red / blue / green) is shown.
- *  Tap the button matching the color of the BOTTOM block to remove it.
- *  Wrong tap → 1-second freeze.
- *  60-second timer — clear as many blocks as possible!
- *  Clearing a full stack earns a +20 bonus.
+ * A color word appears (e.g. "빨강") written in a DIFFERENT ink color.
+ * Player must tap the button matching the INK COLOR (not the word).
+ * Classic Stroop effect — tests focus and color perception!
+ *
+ * +10 correct, -5 wrong, 700ms delay before next question.
  */
 
 (function registerColorMatch() {
 
   const COLORS = [
-    { id: 'red',   label: '빨강', hex: '#ff5252', border: '#c41c00', shadow: '#b71c1c' },
-    { id: 'blue',  label: '파랑', hex: '#2979ff', border: '#0039cb', shadow: '#01579b' },
-    { id: 'green', label: '초록', hex: '#00c853', border: '#007b20', shadow: '#1b5e20' },
+    { name: '빨강', hex: '#ff5555' },
+    { name: '파랑', hex: '#5599ff' },
+    { name: '초록', hex: '#55cc77' },
+    { name: '노랑', hex: '#fdd34d' },
+    { name: '보라', hex: '#c084fc' },
+    { name: '주황', hex: '#fd8863' },
   ];
 
-  const STACK_SIZE  = 12;
-  const PTS_CORRECT = 10;
-  const PTS_BONUS   = 20;  // full-stack clear bonus
-  const FREEZE_MS   = 1000;
+  const POINTS_CORRECT     = 10;
+  const POINTS_WRONG       = 5;
+  const NEXT_ROUND_DELAY   = 700;
 
-  /* ── Stack generator ───────────────────────────────────── */
-  function makeStack() {
-    const blocks = [];
-    for (let i = 0; i < STACK_SIZE; i++) {
-      blocks.push(COLORS[Math.floor(Math.random() * COLORS.length)]);
-    }
-    return blocks;
-  }
-
-  /* ── init ──────────────────────────────────────────────── */
   function init(container, options) {
-    const { playerIndex = 0, playerColor = '#ff5252', onGameOver } = options || {};
+    const { playerIndex = 0, playerColor = 'var(--primary)', onGameOver } = options || {};
     const gameDuration = (window._gameSettings && window._gameSettings.duration) || 60;
 
     let score         = 0;
     let timeLeft      = gameDuration;
     let isGameOver    = false;
-    let isFrozen      = false;
-    let freezeTimeout = null;
+    let isWaiting     = false;
     let timerInterval = null;
-    let stack         = [];  // index 0 = top, last = bottom
+    let roundTimeout  = null;
+    let currentInkColor = null;
 
-    /* ── Build UI ── */
-    container.innerHTML = '';
-    container.style.cssText = `
-      display:flex; flex-direction:column; height:100%;
-      overflow:hidden; position:relative; background:#f7f3ee;
-    `;
+    let dom = {};
 
-    /* HUD */
-    const hud = document.createElement('div');
-    hud.style.cssText = `
-      display:flex; justify-content:space-between; align-items:center;
-      padding:8px 14px; background:rgba(0,0,0,0.06);
-      border-bottom:2px solid rgba(0,0,0,0.08); flex-shrink:0;
-    `;
-    hud.innerHTML = `
-      <span id="cm-score-${playerIndex}" style="font-family:var(--font-display);font-size:1.1rem;font-weight:bold;color:${playerColor};">0점</span>
-      <span id="cm-count-${playerIndex}" style="font-family:var(--font-body);font-size:0.78rem;color:#888;"></span>
-      <span id="cm-timer-${playerIndex}" style="font-family:var(--font-display);font-size:1.1rem;font-weight:bold;color:#3d2b1f;">${gameDuration}s</span>
-    `;
-    container.appendChild(hud);
-
-    /* Timer bar */
-    const timerBarWrap = document.createElement('div');
-    timerBarWrap.style.cssText = 'flex-shrink:0;height:5px;background:rgba(0,0,0,0.07);overflow:hidden;';
-    const timerBarFill = document.createElement('div');
-    timerBarFill.style.cssText = `height:100%;width:100%;background:${playerColor};transition:width 0.5s linear;`;
-    timerBarWrap.appendChild(timerBarFill);
-    container.appendChild(timerBarWrap);
-
-    /* Stack area */
-    const stackArea = document.createElement('div');
-    stackArea.style.cssText = `
-      flex:1; display:flex; flex-direction:column;
-      align-items:center; justify-content:flex-end;
-      padding:10px 20px 6px; overflow:hidden; gap:4px; min-height:0;
-    `;
-    container.appendChild(stackArea);
-
-    /* Freeze overlay */
-    const freezeEl = document.createElement('div');
-    freezeEl.style.cssText = `
-      position:absolute; inset:0; display:none; flex-direction:column;
-      align-items:center; justify-content:center;
-      background:rgba(30,10,10,0.45);
-      font-family:var(--font-display); color:#fff;
-      z-index:5; pointer-events:all; gap:8px;
-    `;
-    freezeEl.innerHTML = `
-      <div style="font-size:2.8rem;">🚫</div>
-      <div style="font-size:1.1rem;font-weight:bold;letter-spacing:0.04em;">1초 대기...</div>
-    `;
-    container.appendChild(freezeEl);
-
-    /* Color buttons */
-    const btnArea = document.createElement('div');
-    btnArea.style.cssText = `
-      display:flex; gap:10px;
-      padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));
-      flex-shrink:0; justify-content:center;
-    `;
-    container.appendChild(btnArea);
-
-    COLORS.forEach(color => {
-      const btn = document.createElement('button');
-      btn.dataset.colorId = color.id;
-      btn.style.cssText = `
-        flex:1; max-width:110px;
-        height:clamp(54px,13vw,76px);
-        border-radius:14px;
-        border:3px solid ${color.border};
-        background:${color.hex};
-        box-shadow:0 5px 0 ${color.shadow};
-        font-family:var(--font-display);
-        font-size:clamp(1rem,3vw,1.35rem);
-        font-weight:bold; color:#fff;
-        cursor:pointer; touch-action:manipulation; user-select:none;
-        transition:transform 0.07s, box-shadow 0.07s;
-        text-shadow:0 1px 4px rgba(0,0,0,0.5);
+    function buildUI() {
+      container.innerHTML = '';
+      container.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+        background:#f7f3ee;
+        font-family: var(--font-body);
       `;
-      btn.textContent = color.label;
-      btn.addEventListener('pointerdown', () => {
-        btn.style.transform = 'translateY(5px)';
-        btn.style.boxShadow = '0 0 0 transparent';
-      });
-      btn.addEventListener('pointerup', () => {
-        btn.style.transform = '';
-        btn.style.boxShadow = `0 5px 0 ${color.shadow}`;
-      });
-      btn.addEventListener('click', () => onColorTap(color));
-      btnArea.appendChild(btn);
-    });
 
-    /* ── Render stack ── */
-    function renderStack() {
-      stackArea.innerHTML = '';
-      const n = stack.length;
-      if (n === 0) return;
+      const topBar = document.createElement('div');
+      topBar.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--surface-container);
+        flex-shrink: 0;
+        gap: var(--space-sm);
+      `;
 
-      const H = stackArea.clientHeight || 260;
-      const blockH = Math.min(Math.floor((H - (n - 1) * 4) / Math.max(n, 8)), 54);
+      const scoreChip = document.createElement('div');
+      scoreChip.className = 'score-chip';
+      scoreChip.innerHTML = `<span class="score-icon">⭐</span><span id="cm-score-${playerIndex}">0</span>점`;
 
-      stack.forEach((color, i) => {
-        const isBottom = (i === n - 1);
-        const block = document.createElement('div');
-        block.style.cssText = `
-          width:100%; max-width:320px; height:${blockH}px;
-          border-radius:10px;
-          background:${color.hex};
-          border:3px solid ${color.border};
-          box-shadow:${isBottom
-            ? `0 4px 0 ${color.shadow}, 0 0 0 3px rgba(255,255,255,0.5), 0 0 12px 2px ${color.hex}88`
-            : `0 3px 0 ${color.shadow}`};
-          display:flex; align-items:center; justify-content:center;
-          font-family:var(--font-display);
-          font-size:clamp(0.75rem,2.2vw,1rem);
-          font-weight:bold; color:rgba(255,255,255,0.92);
-          text-shadow:0 1px 3px rgba(0,0,0,0.45);
-          flex-shrink:0; position:relative; overflow:hidden;
-          opacity:${isBottom ? 1 : (0.55 + 0.45 * (i / n))};
-          ${isBottom ? 'animation:cmBottomIn 0.25s ease-out both;' : ''}
-        `;
-        /* Wood grain */
-        block.innerHTML = `
-          <div style="position:absolute;inset:0;background:repeating-linear-gradient(
-            90deg,transparent,transparent 28px,rgba(255,255,255,0.07) 28px,rgba(255,255,255,0.07) 29px
-          );pointer-events:none;border-radius:8px;"></div>
-          <span style="position:relative;z-index:1;">${color.label}</span>
-        `;
-        /* Arrow on bottom block */
-        if (isBottom) {
-          const arrow = document.createElement('div');
-          arrow.style.cssText = `
-            position:absolute; right:12px;
-            font-size:1.1rem; z-index:2;
-            animation:cmArrow 0.55s ease-in-out infinite alternate;
-          `;
-          arrow.textContent = '◀';
-          block.appendChild(arrow);
-        }
-        stackArea.appendChild(block);
-      });
+      const timerWrap = document.createElement('div');
+      timerWrap.style.cssText = 'display:flex; align-items:center; gap:var(--space-xs);';
+      timerWrap.innerHTML = `<span>⏱</span><div class="timer-digit" id="cm-timer-${playerIndex}">${gameDuration}</div>`;
 
-      const countEl = container.querySelector(`#cm-count-${playerIndex}`);
-      if (countEl) countEl.textContent = `${n}블럭 남음`;
+      topBar.appendChild(scoreChip);
+      topBar.appendChild(timerWrap);
+
+      const timerBarWrap = document.createElement('div');
+      timerBarWrap.className = 'timer-bar-wrapper';
+      timerBarWrap.style.flexShrink = '0';
+      const timerBarFill = document.createElement('div');
+      timerBarFill.className = 'timer-bar-fill';
+      timerBarFill.style.width = '100%';
+      timerBarWrap.appendChild(timerBarFill);
+
+      const instrEl = document.createElement('div');
+      instrEl.style.cssText = `
+        text-align: center;
+        font-size: var(--text-xs);
+        color: var(--on-surface-variant);
+        padding: var(--space-xs) var(--space-sm);
+        flex-shrink: 0;
+      `;
+      instrEl.textContent = '글자의 잉크 색상을 맞춰요! 단어 뜻이 아니에요! 🎨';
+
+      const wordWrap = document.createElement('div');
+      wordWrap.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: var(--space-sm);
+      `;
+      const wordEl = document.createElement('div');
+      wordEl.id = `cm-word-${playerIndex}`;
+      wordEl.style.cssText = `
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 10vw, 6rem);
+        font-weight: bold;
+        text-shadow: 0 0 30px currentColor, 0 4px 12px rgba(0,0,0,0.5);
+        transition: all 0.1s;
+        padding: var(--space-sm) var(--space-lg);
+        border-radius: var(--radius-xl);
+        background: var(--surface-container-high);
+        text-align: center;
+        min-width: 4ch;
+      `;
+      wordWrap.appendChild(wordEl);
+
+      const feedbackEl = document.createElement('div');
+      feedbackEl.id = `cm-feedback-${playerIndex}`;
+      feedbackEl.style.cssText = `
+        text-align: center;
+        font-size: var(--text-md);
+        font-family: var(--font-display);
+        height: 2em;
+        flex-shrink: 0;
+        padding: 0 var(--space-sm);
+      `;
+
+      const btnArea = document.createElement('div');
+      btnArea.id = `cm-btns-${playerIndex}`;
+      btnArea.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: clamp(0.5rem, 2vw, 1rem);
+        padding: var(--space-sm) var(--space-sm) var(--space-md);
+        flex-shrink: 0;
+      `;
+
+      container.appendChild(topBar);
+      container.appendChild(timerBarWrap);
+      container.appendChild(instrEl);
+      container.appendChild(wordWrap);
+      container.appendChild(feedbackEl);
+      container.appendChild(btnArea);
+
+      dom.scoreEl     = container.querySelector(`#cm-score-${playerIndex}`);
+      dom.timerDigit  = container.querySelector(`#cm-timer-${playerIndex}`);
+      dom.timerBar    = timerBarFill;
+      dom.wordEl      = container.querySelector(`#cm-word-${playerIndex}`);
+      dom.feedbackEl  = container.querySelector(`#cm-feedback-${playerIndex}`);
+      dom.btnArea     = container.querySelector(`#cm-btns-${playerIndex}`);
+
+      startGame();
     }
 
-    /* ── Tap handler ── */
-    function onColorTap(color) {
-      if (isGameOver || isFrozen || stack.length === 0) return;
-      const bottom = stack[stack.length - 1];
+    function startGame() {
+      score      = 0;
+      timeLeft   = gameDuration;
+      isGameOver = false;
+      isWaiting  = false;
+      updateScoreUI();
+      updateTimerUI();
+      nextRound();
+      startTimer();
+    }
 
-      if (color.id === bottom.id) {
-        /* Correct */
-        score += PTS_CORRECT;
+    function nextRound() {
+      if (isGameOver) return;
+      isWaiting = false;
+
+      const wordColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      let inkColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      while (inkColor.name === wordColor.name) {
+        inkColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      }
+      currentInkColor = inkColor;
+
+      dom.wordEl.textContent = wordColor.name;
+      dom.wordEl.style.color = inkColor.hex;
+
+      dom.wordEl.style.animation = 'none';
+      void dom.wordEl.offsetWidth;
+      dom.wordEl.style.animation = 'bounceIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both';
+
+      const others = COLORS.filter(c => c.name !== inkColor.name);
+      shuffle(others);
+      const choices = [inkColor, others[0], others[1], others[2]];
+      shuffle(choices);
+
+      dom.btnArea.innerHTML = '';
+      dom.feedbackEl.textContent = '';
+
+      choices.forEach(color => {
+        const btn = document.createElement('button');
+        btn.style.cssText = `
+          width: clamp(3.5rem, 14vw, 6rem);
+          height: clamp(3.5rem, 14vw, 6rem);
+          border-radius: var(--radius-full);
+          border: 3px solid rgba(0,0,0,0.2);
+          background: ${color.hex};
+          cursor: pointer;
+          touch-action: manipulation;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.15em;
+          box-shadow: 0 0 16px 2px ${color.hex}55, 0 4px 12px rgba(0,0,0,0.4);
+          transition: transform 0.1s, filter 0.1s;
+          font-family: var(--font-display);
+          font-size: clamp(0.55rem, 1.5vw, 0.85rem);
+          color: rgba(0,0,0,0.75);
+          font-weight: bold;
+        `;
+        btn.innerHTML = `<span style="font-size:1.8em;">●</span><span>${color.name}</span>`;
+        btn.title = color.name;
+
+        const onTap = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (isWaiting || isGameOver) return;
+          handleChoice(color, btn);
+        };
+        btn.addEventListener('touchend', onTap, { passive: false });
+        btn.addEventListener('click', onTap);
+
+        dom.btnArea.appendChild(btn);
+      });
+    }
+
+    function handleChoice(chosenColor, btn) {
+      isWaiting = true;
+      const correct = chosenColor.name === currentInkColor.name;
+
+      if (correct) {
+        score += POINTS_CORRECT;
         window.SoundEngine?.play('correct');
-        stack.pop();
-        if (stack.length === 0) {
-          score += PTS_BONUS;
-          stack = makeStack();
-          showBonus();
-        }
-        renderStack();
-        updateHUD();
+        dom.feedbackEl.innerHTML = `<span style="color:var(--color-correct);">✅ 정답! +${POINTS_CORRECT}</span>`;
+        btn.style.transform = 'scale(1.25)';
+        btn.style.filter    = 'brightness(1.3)';
+        dom.wordEl.style.outline = '4px solid var(--color-correct)';
       } else {
-        /* Wrong — freeze */
+        score = Math.max(0, score - POINTS_WRONG);
         window.SoundEngine?.play('wrong');
-        setFrozen(true);
-        clearTimeout(freezeTimeout);
-        freezeTimeout = setTimeout(() => setFrozen(false), FREEZE_MS);
+        dom.feedbackEl.innerHTML = `<span style="color:var(--color-wrong);">❌ 틀렸어요! -${POINTS_WRONG}</span>`;
+        btn.style.animation = 'shake 0.4s ease-out';
+        btn.style.filter    = 'brightness(0.6)';
+        dom.wordEl.style.outline = '4px solid var(--color-wrong)';
       }
-    }
 
-    /* ── Freeze ── */
-    function setFrozen(frozen) {
-      isFrozen = frozen;
-      freezeEl.style.display = frozen ? 'flex' : 'none';
-      btnArea.querySelectorAll('button').forEach(b => {
-        b.style.opacity       = frozen ? '0.45' : '1';
-        b.style.pointerEvents = frozen ? 'none' : 'auto';
+      updateScoreUI();
+
+      dom.btnArea.querySelectorAll('button').forEach(b => {
+        b.style.pointerEvents = 'none';
+        if (b !== btn) b.style.opacity = '0.5';
       });
+
+      roundTimeout = setTimeout(() => {
+        dom.wordEl.style.outline = '';
+        nextRound();
+      }, NEXT_ROUND_DELAY);
     }
 
-    /* ── Bonus flash ── */
-    function showBonus() {
-      const flash = document.createElement('div');
-      flash.style.cssText = `
-        position:absolute; top:40%; left:50%; transform:translate(-50%,-50%);
-        font-family:var(--font-display); font-size:1.8rem; font-weight:bold;
-        color:#fdd835; text-shadow:0 2px 8px rgba(0,0,0,0.6);
-        pointer-events:none; z-index:10; white-space:nowrap;
-        animation:cmBonus 0.8s ease-out forwards;
-      `;
-      flash.textContent = `🎉 +${PTS_BONUS} 보너스!`;
-      container.appendChild(flash);
-      flash.addEventListener('animationend', () => flash.remove());
-    }
-
-    /* ── HUD ── */
-    function updateHUD() {
-      const scoreEl = container.querySelector(`#cm-score-${playerIndex}`);
-      const timerEl = container.querySelector(`#cm-timer-${playerIndex}`);
-      if (scoreEl) scoreEl.textContent = `${score}점`;
-      if (timerEl) {
-        timerEl.textContent = `${timeLeft}s`;
-        timerEl.style.color = timeLeft <= 10 ? '#ff5252' : '#3d2b1f';
-      }
-      timerBarFill.style.width = `${(timeLeft / gameDuration) * 100}%`;
-      timerBarFill.style.background = timeLeft <= 10 ? '#ff5252' : playerColor;
-    }
-
-    /* ── Timer ── */
-    function startTimers() {
+    function startTimer() {
+      clearInterval(timerInterval);
       timerInterval = setInterval(() => {
-        if (isGameOver) return;
         timeLeft--;
-        updateHUD();
-        if (timeLeft <= 0) endGame();
+        updateTimerUI();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          triggerGameOver();
+        }
       }, 1000);
     }
 
-    /* ── End game ── */
-    function endGame() {
+    function triggerGameOver() {
       isGameOver = true;
-      clearInterval(timerInterval);
-      clearTimeout(freezeTimeout);
-      setFrozen(false);
+      isWaiting  = true;
+      clearTimeout(roundTimeout);
 
       const key  = `color-match-score-p${playerIndex}`;
       const best = parseInt(localStorage.getItem(key) || '0', 10);
       if (score > best) localStorage.setItem(key, String(score));
+
+      const trophy = score >= 150 ? '🏆' : score >= 80 ? '🥈' : '🎨';
       const isNewBest = score > best;
-      const trophy = score >= 300 ? '🏆' : score >= 150 ? '🥈' : '🎨';
 
       const overlay = document.createElement('div');
       overlay.className = 'game-over-overlay';
@@ -290,45 +298,42 @@
         }
       `;
       container.appendChild(overlay);
+
       if (typeof onGameOver === 'function') onGameOver(score);
     }
 
-    /* ── Inject keyframes ── */
-    if (!document.getElementById('cm-style')) {
-      const s = document.createElement('style');
-      s.id = 'cm-style';
-      s.textContent = `
-        @keyframes cmBottomIn {
-          0%   { transform: scaleX(0.9) scaleY(0.85); opacity: 0.5; }
-          100% { transform: scaleX(1)   scaleY(1);    opacity: 1;   }
-        }
-        @keyframes cmArrow {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-5px); }
-        }
-        @keyframes cmBonus {
-          0%   { transform: translate(-50%,-50%) scale(0.7); opacity: 1; }
-          60%  { transform: translate(-50%,-80%) scale(1.2); opacity: 1; }
-          100% { transform: translate(-50%,-110%) scale(1);  opacity: 0; }
-        }
-      `;
-      document.head.appendChild(s);
+    function updateScoreUI() {
+      if (dom.scoreEl) dom.scoreEl.textContent = score;
     }
 
-    /* ── Start ── */
-    stack = makeStack();
-    renderStack();
-    updateHUD();
-    startTimers();
+    function updateTimerUI() {
+      if (!dom.timerDigit || !dom.timerBar) return;
+      dom.timerDigit.textContent = timeLeft;
+      const pct = (timeLeft / gameDuration) * 100;
+      dom.timerBar.style.width = `${pct}%`;
+      const urgent = timeLeft <= 10;
+      dom.timerDigit.classList.toggle('urgent', urgent);
+      dom.timerBar.classList.toggle('urgent', urgent);
+    }
 
-    return {
-      destroy() {
-        isGameOver = true;
-        clearInterval(timerInterval);
-        clearTimeout(freezeTimeout);
-        container.innerHTML = '';
-      }
-    };
+    function destroy() {
+      clearInterval(timerInterval);
+      clearTimeout(roundTimeout);
+      isGameOver = true;
+      if (container) container.innerHTML = '';
+      dom = {};
+    }
+
+    buildUI();
+    return { destroy };
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   }
 
   window.GameModules = window.GameModules || {};
