@@ -66,18 +66,19 @@
     .sidebar-inner {
       display: flex;
       flex-direction: column;
-      gap: clamp(0.9rem, 1.8vh, 1.5rem);
-      padding: clamp(1.2rem, 2.5vh, 2rem) clamp(1rem, 1.8vw, 1.5rem);
+      gap: clamp(0.45rem, 0.9vh, 0.7rem);
+      padding: clamp(0.9rem, 1.8vh, 1.4rem) clamp(0.8rem, 1.4vw, 1.2rem) clamp(1rem, 2vh, 1.6rem);
       flex: 1;
     }
 
     /* Logo */
     .settings-logo {
       font-family: var(--font-display);
-      font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+      font-size: clamp(1.1rem, 1.8vw, 1.5rem);
       color: #3d2b1f;
       line-height: 1.2;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
+      padding-bottom: 0.1rem;
     }
     .settings-logo em {
       font-style: normal;
@@ -86,19 +87,47 @@
 
     /* Divider */
     .settings-divider {
-      height: 2px;
-      background: rgba(200,160,110,0.18);
+      height: 1.5px;
+      background: rgba(200,160,110,0.14);
       border-radius: 99px;
       flex-shrink: 0;
+    }
+
+    /* Section card */
+    .settings-section {
+      background: #ffffff;
+      border: 1px solid rgba(180,130,80,0.14);
+      border-radius: 14px;
+      padding: 0.5rem 0.65rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      box-shadow: 0 2px 10px rgba(120,80,40,0.09), 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .settings-section .chip {
+      padding: clamp(0.28rem, 0.55vh, 0.45rem) clamp(0.2rem, 0.4vw, 0.35rem);
+      font-size: clamp(0.78rem, 1.15vw, 0.95rem);
     }
 
     /* Section label */
     .settings-label {
       font-family: var(--font-body);
-      font-size: clamp(0.78rem, 1.2vw, 1rem);
+      font-size: clamp(0.62rem, 0.85vw, 0.75rem);
       font-weight: 800;
       color: #b08060;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    /* Sub-label for grade/semester rows */
+    .section-sublabel {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #b08060;
+      flex-shrink: 0;
+      min-width: 2em;
+      text-align: right;
     }
 
     /* Chip grid */
@@ -980,12 +1009,15 @@
 
           <div class="settings-divider"></div>
 
-          <span class="settings-label">👥 플레이어 수</span>
-          <div class="chip-group" id="player-chips" style="display:flex;flex-wrap:nowrap;width:100%;">
-            <button class="chip active" data-count="1">1</button>
-            <button class="chip" data-count="2">2</button>
-            <button class="chip" data-count="3">3</button>
-            <button class="chip" data-count="4">4</button>
+          <!-- 플레이어 수 -->
+          <div class="settings-section">
+            <span class="settings-label">👥 플레이어 수</span>
+            <div class="chip-group" id="player-chips" style="display:flex;flex-wrap:nowrap;">
+              <button class="chip active" data-count="1">1</button>
+              <button class="chip" data-count="2">2</button>
+              <button class="chip" data-count="3">3</button>
+              <button class="chip" data-count="4">4</button>
+            </div>
           </div>
 
           <div id="layout-submenu">
@@ -996,58 +1028,43 @@
             </div>
           </div>
 
-          <div class="settings-divider"></div>
-
-          <span class="settings-label">🏆 토너먼트</span>
+          <!-- 토너먼트 -->
           <button id="btn-tournament" class="btn-lb-sidebar">🏆 토너먼트 개최</button>
 
-          <div class="settings-divider"></div>
-
-          <span class="settings-label">⏱ 제한 시간</span>
-          <div class="chip-group" id="time-chips" style="display:flex;flex-wrap:nowrap;width:100%;">
-            <button class="chip" data-time="30">30초</button>
-            <button class="chip active" data-time="60">1분</button>
-            <button class="chip" data-time="100">100초</button>
+          <!-- 제한 시간 -->
+          <div class="settings-section">
+            <span class="settings-label">⏱ 제한 시간</span>
+            <div class="chip-group" id="time-chips" style="display:flex;flex-wrap:nowrap;">
+              <button class="chip" data-time="30">30초</button>
+              <button class="chip active" data-time="60">1분</button>
+              <button class="chip" data-time="100">100초</button>
+            </div>
           </div>
 
-          <div class="settings-divider"></div>
-
-          <span class="settings-label">📚 학년</span>
-          <div class="chip-group" id="grade-chips" style="display:flex;flex-wrap:wrap;gap:4px;width:100%;">
-            <button class="chip" data-grade="1">1</button>
-            <button class="chip" data-grade="2">2</button>
-            <button class="chip" data-grade="3">3</button>
-            <button class="chip" data-grade="4">4</button>
-            <button class="chip" data-grade="5">5</button>
-            <button class="chip" data-grade="6">6</button>
+          <!-- 수준 (학년 · 학기) -->
+          <div class="settings-section">
+            <span class="settings-label">📚 수준</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="section-sublabel">학년</span>
+              <div id="grade-chips" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;flex:1;">
+                <button class="chip" data-grade="1">1</button>
+                <button class="chip" data-grade="2">2</button>
+                <button class="chip" data-grade="3">3</button>
+                <button class="chip" data-grade="4">4</button>
+                <button class="chip" data-grade="5">5</button>
+                <button class="chip" data-grade="6">6</button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="section-sublabel">학기</span>
+              <div id="semester-chips" style="display:flex;gap:4px;flex:1;">
+                <button class="chip active" data-semester="1" style="flex:1;">1</button>
+                <button class="chip" data-semester="2" style="flex:1;">2</button>
+              </div>
+            </div>
           </div>
 
-          <span class="settings-label">📖 학기</span>
-          <div class="chip-group" id="semester-chips" style="display:flex;flex-wrap:nowrap;width:100%;">
-            <button class="chip active" data-semester="1">1</button>
-            <button class="chip" data-semester="2">2</button>
-          </div>
-
-          <!--
-          <div class="settings-divider"></div>
-
-          <span class="settings-label">🏷 카테고리</span>
-          <div class="chip-group" id="category-chips" style="flex-wrap:wrap;">
-            <button class="chip active" data-cat="전체">전체</button>
-            <button class="chip" data-cat="수학">수학</button>
-            <button class="chip" data-cat="집중력">집중력</button>
-            <button class="chip" data-cat="계산">계산</button>
-            <button class="chip" data-cat="언어">언어</button>
-            <button class="chip" data-cat="기억력">기억력</button>
-            <button class="chip" data-cat="음악">음악</button>
-            <button class="chip" data-cat="전략">전략</button>
-            <button class="chip" data-cat="추리">추리</button>
-            <button class="chip" data-cat="아케이드">아케이드</button>
-            <button class="chip" data-cat="퀴즈">퀴즈</button>
-          </div>
-
-          <div class="settings-divider"></div>
-          -->
+          <div class="settings-divider" style="margin-top:auto;"></div>
 
           <button class="btn-start" id="btn-start">▶ 게임 시작!</button>
 
@@ -1059,10 +1076,10 @@
             justify-content:center;
             gap:0.25em;
             font-family:var(--font-body);
-            font-size:clamp(0.72rem,1.1vw,0.85rem);
+            font-size:clamp(0.65rem,0.95vw,0.78rem);
             color:#b08060;
             text-align:center;
-            padding:0.3em 0;
+            padding:0.2em 0;
           ">—</div>
 
         </div>
