@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face {
+    font-family: 'Pretendard';
+    src: url('/usr/share/fonts/pretendard/Pretendard-Bold.ttf') format('truetype');
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: 'Pretendard';
+    src: url('/usr/share/fonts/pretendard/Pretendard-Black.ttf') format('truetype');
+    font-weight: 900;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    background: #fdf6ed;
+    position: relative;
+    font-family: 'Pretendard', sans-serif;
+  }
+
+  /* Dot pattern background */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(180,130,80,0.10) 1.5px, transparent 1.5px);
+    background-size: 26px 26px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Background card grid — slightly rotated */
+  .bg-cards {
+    position: absolute;
+    inset: -60px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 18px;
+    padding: 30px;
+    transform: rotate(-5deg) scale(1.08);
+    z-index: 1;
+  }
+
+  /* Real card design: cream bg, warm border, shadow */
+  .bg-card {
+    background: #fffdf8;
+    border-radius: 18px;
+    border: 2px solid rgba(200,160,110,0.35);
+    box-shadow: 3px 3px 0 rgba(180,130,80,0.18), 4px 5px 0 rgba(0,0,0,0.10);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 4px 6px;
+    overflow: hidden;
+  }
+
+  /* Colored circle icon area */
+  .bg-card .icon-circle {
+    width: 58%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Card label */
+  .bg-card .card-label {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 700;
+    font-size: 0.55rem;
+    color: #5a3e2b;
+    letter-spacing: -0.01em;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  /* Tag chip (top-left on card) */
+  .bg-card .card-tag-chip {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: #ff8c42;
+    color: #fff;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 700;
+    font-size: 0.38rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Center overlay */
+  .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: radial-gradient(ellipse 65% 58% at 50% 50%, rgba(253,246,237,0.91) 55%, rgba(253,246,237,0.60) 75%, transparent 100%);
+    z-index: 10;
+  }
+
+  .brand {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 900;
+    font-size: 100px;
+    color: #3d2b1f;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-shadow: 5px 5px 0 rgba(61,43,31,0.10);
+  }
+  .brand em {
+    color: #e8630a;
+    font-style: normal;
+  }
+  .sub {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: #b08060;
+    letter-spacing: 0.04em;
+  }
+
+  /* Bottom badge row */
+  .badges {
+    position: absolute;
+    bottom: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    z-index: 11;
+  }
+  .badge {
+    background: #fffdf8;
+    border: 2px solid rgba(180,130,80,0.30);
+    border-radius: 999px;
+    padding: 8px 22px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #3d2b1f;
+    box-shadow: 2px 3px 0 rgba(180,130,80,0.18), 0 4px 12px rgba(0,0,0,0.07);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- Background decorative card grid -->
+<div class="bg-cards">
+
+  <!-- Row 1 -->
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">수학</span>
+    <div class="icon-circle" style="background:#fff8d6;">🔢</div>
+    <span class="card-label">숫자 팡팡</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">감각</span>
+    <div class="icon-circle" style="background:#d4f7e4;">⚡</div>
+    <span class="card-label">반응속도</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">아케이드</span>
+    <div class="icon-circle" style="background:#d6e8ff;">🪜</div>
+    <span class="card-label">무한의 계단</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">집중력</span>
+    <div class="icon-circle" style="background:#ffe8d4;">🎨</div>
+    <span class="card-label">색깔 맞추기</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">언어</span>
+    <div class="icon-circle" style="background:#f3d6ff;">📝</div>
+    <span class="card-label">낱말 퀴즈</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">음악</span>
+    <div class="icon-circle" style="background:#ffd6e8;">🥁</div>
+    <span class="card-label">리듬 탭</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">전략</span>
+    <div class="icon-circle" style="background:#d0f5fb;">🟦</div>
+    <span class="card-label">테트리스</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">아케이드</span>
+    <div class="icon-circle" style="background:#ffd6d6;">💥</div>
+    <span class="card-label">블록 깨기</span>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">아케이드</span>
+    <div class="icon-circle" style="background:#dff7e4;">🐍</div>
+    <span class="card-label">뱀 게임</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">퀴즈</span>
+    <div class="icon-circle" style="background:#fff8d6;">✖️</div>
+    <span class="card-label">구구단 배틀</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">퀴즈</span>
+    <div class="icon-circle" style="background:#d0f5fb;">⭕</div>
+    <span class="card-label">퀴즈</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">퀴즈</span>
+    <div class="icon-circle" style="background:#dde4ff;">🌍</div>
+    <span class="card-label">국기 퀴즈</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">퀴즈</span>
+    <div class="icon-circle" style="background:#d0f5ed;">🔤</div>
+    <span class="card-label">영어 단어</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">추리</span>
+    <div class="icon-circle" style="background:#e4ecf0;">💣</div>
+    <span class="card-label">지뢰 찾기</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">집중력</span>
+    <div class="icon-circle" style="background:#e4ecf0;">🧱</div>
+    <span class="card-label">집중력</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">수학</span>
+    <div class="icon-circle" style="background:#d6e8ff;">🔢</div>
+    <span class="card-label">넘버 슬라이드</span>
+  </div>
+
+  <!-- Row 3 -->
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">집중력</span>
+    <div class="icon-circle" style="background:#fff3d0;">🔍</div>
+    <span class="card-label">숫자 사냥</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">기억력</span>
+    <div class="icon-circle" style="background:#d4f7e4;">🃏</div>
+    <span class="card-label">기억 카드</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">계산</span>
+    <div class="icon-circle" style="background:#d6eaff;">🏎️</div>
+    <span class="card-label">수학 레이스</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">수학</span>
+    <div class="icon-circle" style="background:#fff8d6;">✏️</div>
+    <span class="card-label">빠진 수 찾기</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">감각</span>
+    <div class="icon-circle" style="background:#d6eaff;">⏱️</div>
+    <span class="card-label">타임마스터</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">기억력</span>
+    <div class="icon-circle" style="background:#f3d6ff;">🃏</div>
+    <span class="card-label">기억력</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">수학</span>
+    <div class="icon-circle" style="background:#ffefd0;">💣</div>
+    <span class="card-label">숫자 폭탄</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">감각</span>
+    <div class="icon-circle" style="background:#d4f7e4;">⚡</div>
+    <span class="card-label">반응속도</span>
+  </div>
+
+  <!-- Row 4 -->
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">수학</span>
+    <div class="icon-circle" style="background:#fff8d6;">💫</div>
+    <span class="card-label">수학</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">집중력</span>
+    <div class="icon-circle" style="background:#ffe8d4;">🎯</div>
+    <span class="card-label">집중력</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">전략</span>
+    <div class="icon-circle" style="background:#d0f5fb;">🧩</div>
+    <span class="card-label">퍼즐</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">아케이드</span>
+    <div class="icon-circle" style="background:#d4f7e4;">🎮</div>
+    <span class="card-label">게임</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">감각</span>
+    <div class="icon-circle" style="background:#dde4ff;">⭐</div>
+    <span class="card-label">도전</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">창의</span>
+    <div class="icon-circle" style="background:#fff8d6;">🏆</div>
+    <span class="card-label">빨리 그리기</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">아케이드</span>
+    <div class="icon-circle" style="background:#ffd6d6;">🔥</div>
+    <span class="card-label">아케이드</span>
+  </div>
+  <div class="bg-card" style="position:relative;">
+    <span class="card-tag-chip">추리</span>
+    <div class="icon-circle" style="background:#e4ecf0;">🎲</div>
+    <span class="card-label">추리</span>
+  </div>
+</div>
+
+<!-- Center content -->
+<div class="center">
+  <div class="brand">칠판게임<em>🎮</em></div>
+  <div class="sub">누구나 즐기는 두뇌 단련 미니게임 모음</div>
+</div>
+
+<!-- Bottom badges -->
+<div class="badges">
+  <div class="badge">🔢 수학</div>
+  <div class="badge">🧠 기억력</div>
+  <div class="badge">⚡ 반응속도</div>
+  <div class="badge">🎨 집중력</div>
+  <div class="badge">🏆 멀티플레이</div>
+</div>
+
+</body>
+</html>
