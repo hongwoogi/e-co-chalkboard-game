@@ -109,7 +109,7 @@ const GAMES = [
     id:          'color-match',
     name:        '색깔 맞추기',
     icon:        '🎨',
-    description: '글자의 잉크 색상을 맞춰봐요! Stroop 효과 집중력 게임!',
+    description: '빨강·파랑·초록 나무블럭! 가장 아래 블럭 색깔 버튼을 눌러 하나씩 지워봐요!',
     color:       '#fd8863',
     isNew:       false,
     isHot:       true,
