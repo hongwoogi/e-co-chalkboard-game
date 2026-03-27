@@ -206,7 +206,7 @@
     background: var(--card2);
   }
   td {
-    padding: 11px 22px; font-size: 0.88rem;
+    padding: 9px 18px; font-size: 0.82rem;
     border-bottom: 1px solid rgba(0,0,0,0.04);
   }
   tr:last-child td { border-bottom: none; }
@@ -214,12 +214,29 @@
   .score-badge {
     display: inline-block; padding: 3px 10px;
     background: rgba(232,99,10,0.12); color: var(--accent);
-    border-radius: 999px; font-weight: 700; font-size: 0.82rem;
+    border-radius: 999px; font-weight: 700; font-size: 0.78rem;
+    white-space: nowrap;
   }
   .rank-1 { color: #d97706; font-weight: 800; }
   .rank-2 { color: #64748b; font-weight: 700; }
   .rank-3 { color: #92400e; font-weight: 700; }
   .empty-row td { text-align: center; color: var(--muted); padding: 28px; }
+  /* Leaderboard period filter */
+  .lb-period-btns {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .lb-period-btns button {
+    padding: 5px 14px; border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lb-period-btns button:hover { border-color: var(--accent); color: var(--accent); }
+  .lb-period-btns button.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff;
+  }
 
   /* ── MANAGE ── */
   .manage-grid {
@@ -429,9 +446,17 @@
       <div class="page-title"><img src="/icons/times-quiz.svg">리더보드</div>
 
       <div class="chart-card">
-        <div class="game-select-wrap">
-          <label>게임 선택</label>
-          <select id="lb-game-select"></select>
+        <div class="game-select-wrap" style="flex-direction:column;align-items:flex-start;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label>게임 선택</label>
+            <select id="lb-game-select"></select>
+          </div>
+          <div class="lb-period-btns" id="lb-period-btns">
+            <button data-period="today">오늘</button>
+            <button data-period="week">이번 주</button>
+            <button data-period="month">이번 달</button>
+            <button data-period="all" class="active">전체</button>
+          </div>
         </div>
         <div class="table-card" style="border:none;background:transparent;">
           <table>
@@ -567,10 +592,29 @@ async function getPlayData() {
               .sort((a, b) => b.plays - a.plays);
 }
 
-async function getHighScores(gameId) {
-  // Use existing scores table
+function getPeriodStart(period) {
+  if (period === 'all') return null;
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const nowKst = new Date(Date.now() + kstOffset);
+  const d = new Date(nowKst);
+  if (period === 'today') {
+    d.setUTCHours(0, 0, 0, 0);
+  } else if (period === 'week') {
+    d.setUTCHours(0, 0, 0, 0);
+    const day = d.getUTCDay();
+    d.setUTCDate(d.getUTCDate() - (day === 0 ? 6 : day - 1)); // Monday
+  } else if (period === 'month') {
+    d.setUTCDate(1);
+    d.setUTCHours(0, 0, 0, 0);
+  }
+  return new Date(d.getTime() - kstOffset).toISOString();
+}
+
+async function getHighScores(gameId, period = 'all') {
+  const periodStart = getPeriodStart(period);
+  const filter = periodStart ? `&created_at=gte.${encodeURIComponent(periodStart)}` : '';
   const rows = await supaGet(
-    `/rest/v1/scores?game=eq.${encodeURIComponent(gameId)}&order=score.desc&limit=20`
+    `/rest/v1/scores?game=eq.${encodeURIComponent(gameId)}&order=score.desc&limit=30${filter}`
   );
   return rows.map(r => ({ player: r.player || '익명', score: r.score, date: r.created_at }));
 }
@@ -768,11 +812,14 @@ async function renderGames() {
   }).join('');
 }
 
-async function renderLeaderboard(gameId) {
+let _lbPeriod = 'all';
+
+async function renderLeaderboard(gameId, period) {
+  if (period !== undefined) _lbPeriod = period;
   const tbody = document.getElementById('lb-table-body');
   tbody.innerHTML = `<tr class="empty-row"><td colspan="4" style="color:var(--muted);">불러오는 중...</td></tr>`;
   try {
-    const scores = await getHighScores(gameId);
+    const scores = await getHighScores(gameId, _lbPeriod);
     const medals = ['🥇', '🥈', '🥉'];
     tbody.innerHTML = scores.length
       ? scores.map((s, i) => {
@@ -782,7 +829,7 @@ async function renderLeaderboard(gameId) {
             <td class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${medals[i] || i+1}</td>
             <td>${s.player}</td>
             <td><span class="score-badge">${s.score.toLocaleString()}점</span></td>
-            <td style="color:var(--muted);font-size:0.78rem;">${dateStr}</td>
+            <td style="color:var(--muted);font-size:0.75rem;">${dateStr}</td>
           </tr>`;
         }).join('')
       : `<tr class="empty-row"><td colspan="4">저장된 점수가 없어요 🎮</td></tr>`;
@@ -800,7 +847,16 @@ function initLeaderboardSelect() {
     sel.appendChild(opt);
   });
   sel.addEventListener('change', () => renderLeaderboard(sel.value));
-  renderLeaderboard(GAMES[0].id);
+
+  document.getElementById('lb-period-btns').addEventListener('click', e => {
+    const btn = e.target.closest('[data-period]');
+    if (!btn) return;
+    document.querySelectorAll('#lb-period-btns button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderLeaderboard(sel.value, btn.dataset.period).catch(console.error);
+  });
+
+  renderLeaderboard(GAMES[0].id, 'all');
 }
 
 /* ─── Navigation ─── */
@@ -813,7 +869,7 @@ function activatePage(pageId) {
   if (pageId === 'overview')    renderOverview().catch(console.error);
   if (pageId === 'visits')      renderVisits().catch(console.error);
   if (pageId === 'games')       renderGames().catch(console.error);
-  if (pageId === 'leaderboard') renderLeaderboard(document.getElementById('lb-game-select')?.value || GAMES[0].id).catch(console.error);
+  if (pageId === 'leaderboard') renderLeaderboard(document.getElementById('lb-game-select')?.value || GAMES[0].id, _lbPeriod).catch(console.error);
 }
 
 /* ─── Manage actions ─── */
