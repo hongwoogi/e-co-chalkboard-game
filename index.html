@@ -1648,6 +1648,12 @@
         window._gameSettings = { duration: selectedTime, playerCount: effectiveCount, difficulties: _prevDiffs || {}, grade: selectedGrade, semester: selectedSemester };
         window._lastGameConfig = { selectedCount: effectiveCount, variant, selectedGame };
 
+        /* ── Analytics: track game play ── */
+        if (selectedGame) {
+          const pk = `mgr_play_${selectedGame}`;
+          localStorage.setItem(pk, (parseInt(localStorage.getItem(pk) || '0') + 1).toString());
+        }
+
         const game      = window.getGameById(selectedGame);
         const cdOverlay = document.getElementById('countdown-overlay');
         const cdNum     = document.getElementById('cd-number');
@@ -1904,6 +1910,15 @@
 
       /* ── Visitor counter ── */
       window.VisitorCounter?.init();
+
+      /* ── Analytics: track daily visit ── */
+      (function() {
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const vk = `mgr_visit_${today}`;
+          localStorage.setItem(vk, (parseInt(localStorage.getItem(vk) || '0') + 1).toString());
+        } catch(e) {}
+      })();
 
       /* ── Prevent scroll on game area ── */
       document.addEventListener('contextmenu', e => e.preventDefault());
