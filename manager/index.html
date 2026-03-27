@@ -153,16 +153,18 @@
   .stat-card {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 20px 22px;
-    display: flex; flex-direction: column; gap: 6px;
+    display: flex; flex-direction: column; gap: 10px;
     box-shadow: var(--shadow);
   }
-  .stat-icon { display: flex; align-items: center; }
-  .stat-icon img { width: 36px; height: 36px; object-fit: contain; opacity: 0.7; }
+  .stat-header {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .stat-header img { width: 22px; height: 22px; object-fit: contain; opacity: 0.5; flex-shrink: 0; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
   .stat-value {
     font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;
     color: var(--accent);
   }
-  .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
   .stat-card.green .stat-value { color: var(--accent2); }
   .stat-card.blue  .stat-value { color: var(--accent3); }
   .stat-card.purple .stat-value { color: #a855f7; }
@@ -358,24 +360,20 @@
 
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-icon"><img src="/icons/number-hunt.svg"></div>
+          <div class="stat-header"><img src="/icons/number-hunt.svg"><span class="stat-label">오늘 방문</span></div>
           <div class="stat-value" id="stat-today">—</div>
-          <div class="stat-label">오늘 방문</div>
         </div>
         <div class="stat-card green">
-          <div class="stat-icon"><img src="/icons/number-pop.svg"></div>
+          <div class="stat-header"><img src="/icons/number-pop.svg"><span class="stat-label">총 방문 (14일)</span></div>
           <div class="stat-value" id="stat-total">—</div>
-          <div class="stat-label">총 방문 (14일)</div>
         </div>
         <div class="stat-card blue">
-          <div class="stat-icon"><img src="/icons/tetris.svg"></div>
+          <div class="stat-header"><img src="/icons/tetris.svg"><span class="stat-label">총 게임 플레이</span></div>
           <div class="stat-value" id="stat-plays">—</div>
-          <div class="stat-label">총 게임 플레이</div>
         </div>
         <div class="stat-card purple">
-          <div class="stat-icon"><img src="/icons/times-quiz.svg"></div>
+          <div class="stat-header"><img src="/icons/times-quiz.svg"><span class="stat-label">인기 게임</span></div>
           <div class="stat-value" id="stat-top">—</div>
-          <div class="stat-label">인기 게임</div>
         </div>
       </div>
 
