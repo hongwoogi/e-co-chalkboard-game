@@ -368,7 +368,7 @@
         </div>
         <div class="table-card" style="border:none;background:transparent;">
           <table>
-            <thead><tr><th>순위</th><th>플레이어</th><th>점수</th></tr></thead>
+            <thead><tr><th>순위</th><th>플레이어</th><th>점수</th><th>날짜</th></tr></thead>
             <tbody id="lb-table-body"></tbody>
           </table>
         </div>
@@ -479,11 +479,9 @@ const GAMES = [
 
 /* ─── Data helpers (Supabase) ─── */
 async function getVisitData(days) {
-  const from = new Date();
-  from.setDate(from.getDate() - days + 1);
-  const fromStr = from.toISOString().slice(0, 10);
-  const rows = await supaGet(`/rest/v1/analytics_visits?date=gte.${fromStr}&order=date.asc`);
-  const byDate = Object.fromEntries(rows.map(r => [r.date, r.count]));
+  // Use existing visits table via aggregation RPC
+  const rows = await supaGet(`/rest/v1/rpc/get_daily_visits?days_back=${days}`);
+  const byDate = Object.fromEntries(rows.map(r => [r.date, Number(r.count)]));
 
   const result = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -502,15 +500,12 @@ async function getPlayData() {
               .sort((a, b) => b.plays - a.plays);
 }
 
-function getHighScores(gameId) {
-  const rows = [];
-  for (let p = 0; p < 4; p++) {
-    const v = localStorage.getItem(`${gameId}-score-p${p}`);
-    if (v !== null && parseInt(v) > 0) {
-      rows.push({ player: `플레이어 ${p + 1}`, score: parseInt(v) });
-    }
-  }
-  return rows.sort((a, b) => b.score - a.score);
+async function getHighScores(gameId) {
+  // Use existing scores table
+  const rows = await supaGet(
+    `/rest/v1/scores?game=eq.${encodeURIComponent(gameId)}&order=score.desc&limit=20`
+  );
+  return rows.map(r => ({ player: r.player || '익명', score: r.score, date: r.created_at }));
 }
 
 /* ─── Canvas charts ─── */
@@ -626,9 +621,14 @@ function drawHBars(canvas, data) {
 
 /* ─── Render pages ─── */
 async function renderOverview() {
-  const [visits, plays] = await Promise.all([getVisitData(14), getPlayData()]);
-  const today   = visits[visits.length - 1].count;
-  const total   = visits.reduce((s, v) => s + v.count, 0);
+  const [visits, plays, statsRows] = await Promise.all([
+    getVisitData(14),
+    getPlayData(),
+    supaGet('/rest/v1/rpc/get_visit_stats'),
+  ]);
+  const stats = statsRows[0] || { today: 0, total: 0 };
+  const today = stats.today;
+  const total   = Number(stats.total);
   const totPlay = plays.reduce((s, g) => s + g.plays, 0);
   const topGame = plays.find(g => g.plays > 0);
 
@@ -707,17 +707,27 @@ async function renderGames() {
   }).join('');
 }
 
-function renderLeaderboard(gameId) {
-  const scores = getHighScores(gameId);
-  const tbody  = document.getElementById('lb-table-body');
-  const medals = ['🥇', '🥈', '🥉'];
-  tbody.innerHTML = scores.length
-    ? scores.map((s, i) => `<tr>
-        <td class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${medals[i] || i+1}</td>
-        <td>${s.player}</td>
-        <td><span class="score-badge">${s.score.toLocaleString()}점</span></td>
-      </tr>`).join('')
-    : `<tr class="empty-row"><td colspan="3">저장된 점수가 없어요 🎮</td></tr>`;
+async function renderLeaderboard(gameId) {
+  const tbody = document.getElementById('lb-table-body');
+  tbody.innerHTML = `<tr class="empty-row"><td colspan="4" style="color:var(--muted);">불러오는 중...</td></tr>`;
+  try {
+    const scores = await getHighScores(gameId);
+    const medals = ['🥇', '🥈', '🥉'];
+    tbody.innerHTML = scores.length
+      ? scores.map((s, i) => {
+          const d = s.date ? new Date(s.date) : null;
+          const dateStr = d ? `${d.getMonth()+1}/${d.getDate()}` : '';
+          return `<tr>
+            <td class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${medals[i] || i+1}</td>
+            <td>${s.player}</td>
+            <td><span class="score-badge">${s.score.toLocaleString()}점</span></td>
+            <td style="color:var(--muted);font-size:0.78rem;">${dateStr}</td>
+          </tr>`;
+        }).join('')
+      : `<tr class="empty-row"><td colspan="4">저장된 점수가 없어요 🎮</td></tr>`;
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4" style="color:var(--danger);">오류: ${e.message}</td></tr>`;
+  }
 }
 
 function initLeaderboardSelect() {
@@ -742,14 +752,14 @@ function activatePage(pageId) {
   if (pageId === 'overview')    renderOverview().catch(console.error);
   if (pageId === 'visits')      renderVisits().catch(console.error);
   if (pageId === 'games')       renderGames().catch(console.error);
-  if (pageId === 'leaderboard') renderLeaderboard(document.getElementById('lb-game-select')?.value || GAMES[0].id);
+  if (pageId === 'leaderboard') renderLeaderboard(document.getElementById('lb-game-select')?.value || GAMES[0].id).catch(console.error);
 }
 
 /* ─── Manage actions ─── */
 async function clearVisits() {
   if (!confirm('방문 데이터를 모두 삭제할까요?')) return;
   try {
-    await supaDelete('/rest/v1/analytics_visits?date=gte.2000-01-01');
+    await supaDelete('/rest/v1/visits?id=neq.00000000-0000-0000-0000-000000000000');
     alert('삭제 완료!');
     renderOverview().catch(console.error);
   } catch(e) { alert('오류: ' + e.message); }
@@ -776,7 +786,7 @@ async function clearAll() {
 async function exportData() {
   try {
     const [visitRows, playRows] = await Promise.all([
-      supaGet('/rest/v1/analytics_visits?order=date.asc'),
+      supaGet('/rest/v1/rpc/get_daily_visits?days_back=365'),
       supaGet('/rest/v1/analytics_game_plays?order=count.desc'),
     ]);
     const scores = {};
@@ -845,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Leaderboard game select */
   document.getElementById('lb-game-select').addEventListener('change', e => {
-    renderLeaderboard(e.target.value);
+    renderLeaderboard(e.target.value).catch(console.error);
   });
 });
 </script>
