@@ -8,18 +8,19 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:       #0f1117;
-    --sidebar:  #161b27;
-    --card:     #1e2435;
-    --card2:    #252c3f;
-    --border:   rgba(255,255,255,0.08);
+    --bg:       #f6f6f6;
+    --sidebar:  #ffffff;
+    --card:     #fafafa;
+    --card2:    #f0f0f0;
+    --border:   rgba(0,0,0,0.07);
     --accent:   #e8630a;
-    --accent2:  #4ade80;
-    --accent3:  #60a5fa;
-    --text:     #e8ecf0;
-    --muted:    #7d8aa0;
-    --danger:   #f87171;
+    --accent2:  #22c55e;
+    --accent3:  #3b82f6;
+    --text:     #1a1a1a;
+    --muted:    #888;
+    --danger:   #ef4444;
     --radius:   14px;
+    --shadow:   0 0 18px rgba(0,0,0,0.08);
   }
 
   body {
@@ -44,12 +45,14 @@
     padding: 40px 36px;
     width: 360px;
     display: flex; flex-direction: column; gap: 16px;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    box-shadow: var(--shadow);
   }
   .login-logo {
     font-size: 1.6rem; font-weight: 800;
     text-align: center; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
   }
+  .login-logo img { width: 32px; height: 32px; object-fit: contain; }
   .login-logo span { color: var(--accent); }
   .login-card label { font-size: 0.78rem; color: var(--muted); font-weight: 600; letter-spacing: 0.05em; }
   .login-card input {
@@ -94,7 +97,9 @@
     padding: 0 20px 24px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
   }
+  .sidebar-logo img { width: 22px; height: 22px; object-fit: contain; }
   .sidebar-logo em { color: var(--accent); font-style: normal; }
   .sidebar nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
   .sidebar nav a {
@@ -105,16 +110,22 @@
     transition: background 0.15s, color 0.15s;
     cursor: pointer;
   }
-  .sidebar nav a:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-  .sidebar nav a.active { background: rgba(232,99,10,0.15); color: var(--accent); }
+  .sidebar nav a .nav-icon {
+    width: 20px; height: 20px; object-fit: contain;
+    opacity: 0.35; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .sidebar nav a:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+  .sidebar nav a:hover .nav-icon { opacity: 0.6; }
+  .sidebar nav a.active { background: rgba(232,99,10,0.1); color: var(--accent); }
+  .sidebar nav a.active .nav-icon { opacity: 1; filter: sepia(1) saturate(4) hue-rotate(-10deg); }
   .sidebar-bottom { padding: 16px 10px 0; }
   .logout-btn {
     width: 100%; padding: 10px; border: none; border-radius: 10px;
-    background: rgba(248,113,113,0.12); color: var(--danger);
+    background: rgba(239,68,68,0.08); color: var(--danger);
     font-size: 0.85rem; font-weight: 600; cursor: pointer;
     transition: background 0.15s;
   }
-  .logout-btn:hover { background: rgba(248,113,113,0.22); }
+  .logout-btn:hover { background: rgba(239,68,68,0.15); }
 
   /* ── CONTENT ── */
   .content {
@@ -128,8 +139,10 @@
 
   .page-title {
     font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
   }
-  .page-title span { color: var(--muted); font-weight: 400; font-size: 0.9rem; margin-left: 8px; }
+  .page-title img { width: 30px; height: 30px; object-fit: contain; }
+  .page-title span { color: var(--muted); font-weight: 400; font-size: 0.9rem; margin-left: 4px; }
 
   /* ── STAT CARDS ── */
   .stat-grid {
@@ -141,8 +154,10 @@
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 20px 22px;
     display: flex; flex-direction: column; gap: 6px;
+    box-shadow: var(--shadow);
   }
-  .stat-icon { font-size: 1.4rem; }
+  .stat-icon { display: flex; align-items: center; }
+  .stat-icon img { width: 36px; height: 36px; object-fit: contain; opacity: 0.7; }
   .stat-value {
     font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;
     color: var(--accent);
@@ -150,18 +165,21 @@
   .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
   .stat-card.green .stat-value { color: var(--accent2); }
   .stat-card.blue  .stat-value { color: var(--accent3); }
-  .stat-card.purple .stat-value { color: #c084fc; }
+  .stat-card.purple .stat-value { color: #a855f7; }
 
   /* ── CHART CARD ── */
   .chart-card {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 22px 24px;
+    box-shadow: var(--shadow);
   }
   .chart-card h2 {
     font-size: 0.9rem; font-weight: 700; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.06em;
     margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
   }
+  .chart-card h2 img { width: 18px; height: 18px; object-fit: contain; opacity: 0.5; }
   .chart-card canvas {
     width: 100%; display: block;
   }
@@ -170,6 +188,7 @@
   .table-card {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
   }
   .table-card h2 {
     font-size: 0.9rem; font-weight: 700; color: var(--muted);
@@ -186,18 +205,18 @@
   }
   td {
     padding: 11px 22px; font-size: 0.88rem;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(0,0,0,0.04);
   }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr:hover td { background: rgba(0,0,0,0.02); }
   .score-badge {
     display: inline-block; padding: 3px 10px;
-    background: rgba(232,99,10,0.15); color: var(--accent);
+    background: rgba(232,99,10,0.12); color: var(--accent);
     border-radius: 999px; font-weight: 700; font-size: 0.82rem;
   }
-  .rank-1 { color: #fdd835; font-weight: 800; }
-  .rank-2 { color: #b0bec5; font-weight: 700; }
-  .rank-3 { color: #cd7f32; font-weight: 700; }
+  .rank-1 { color: #d97706; font-weight: 800; }
+  .rank-2 { color: #64748b; font-weight: 700; }
+  .rank-3 { color: #92400e; font-weight: 700; }
   .empty-row td { text-align: center; color: var(--muted); padding: 28px; }
 
   /* ── MANAGE ── */
@@ -209,23 +228,25 @@
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 20px 22px;
     display: flex; flex-direction: column; gap: 10px;
+    box-shadow: var(--shadow);
   }
-  .manage-card h3 { font-size: 0.95rem; font-weight: 700; }
+  .manage-card h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .manage-card h3 img { width: 20px; height: 20px; object-fit: contain; opacity: 0.6; }
   .manage-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
   .danger-btn {
     padding: 9px 16px; border: none; border-radius: 8px;
-    background: rgba(248,113,113,0.12); color: var(--danger);
+    background: rgba(239,68,68,0.08); color: var(--danger);
     font-size: 0.85rem; font-weight: 600; cursor: pointer;
     transition: background 0.15s; align-self: flex-start;
   }
-  .danger-btn:hover { background: rgba(248,113,113,0.25); }
+  .danger-btn:hover { background: rgba(239,68,68,0.15); }
   .safe-btn {
     padding: 9px 16px; border: none; border-radius: 8px;
-    background: rgba(96,165,250,0.12); color: var(--accent3);
+    background: rgba(59,130,246,0.08); color: var(--accent3);
     font-size: 0.85rem; font-weight: 600; cursor: pointer;
     transition: background 0.15s; align-self: flex-start;
   }
-  .safe-btn:hover { background: rgba(96,165,250,0.22); }
+  .safe-btn:hover { background: rgba(59,130,246,0.15); }
 
   /* ── GAME SELECT ── */
   .game-select-wrap {
@@ -243,7 +264,7 @@
   /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
 
   /* ── BOTTOM NAV (mobile) ── */
   .bottom-nav {
@@ -253,6 +274,7 @@
     background: var(--sidebar);
     border-top: 1px solid var(--border);
     z-index: 50;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
   }
   .bottom-nav nav {
     display: flex; height: 100%;
@@ -260,14 +282,16 @@
   .bottom-nav nav a {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 2px; color: var(--muted);
+    gap: 3px; color: var(--muted);
     text-decoration: none; font-size: 0.6rem; font-weight: 600;
     transition: color 0.15s; cursor: pointer;
     padding: 6px 0;
   }
-  .bottom-nav nav a .bn-icon { font-size: 1.25rem; line-height: 1; }
+  .bottom-nav nav a .bn-icon { width: 22px; height: 22px; object-fit: contain; opacity: 0.3; transition: opacity 0.15s; }
   .bottom-nav nav a:hover { color: var(--text); }
+  .bottom-nav nav a:hover .bn-icon { opacity: 0.6; }
   .bottom-nav nav a.active { color: var(--accent); }
+  .bottom-nav nav a.active .bn-icon { opacity: 1; filter: sepia(1) saturate(4) hue-rotate(-10deg); }
 
   @media (max-width: 768px) {
     body { overflow: auto; }
@@ -285,7 +309,7 @@
 <!-- ─── LOGIN ─── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">🎮 <span>칠판게임</span> 관리자</div>
+    <div class="login-logo"><img src="/icons/tetris.svg"><span>칠판게임</span> 관리자</div>
     <div>
       <label>아이디</label>
       <input type="text" id="inp-id" placeholder="아이디를 입력하세요" autocomplete="username">
@@ -302,13 +326,13 @@
 <!-- ─── DASHBOARD ─── -->
 <div id="dashboard">
   <aside class="sidebar">
-    <div class="sidebar-logo">🎮 <em>칠판게임</em></div>
+    <div class="sidebar-logo"><img src="/icons/tetris.svg"><em>칠판게임</em></div>
     <nav id="nav-links">
-      <a data-page="overview"     class="active">📊 &nbsp;개요</a>
-      <a data-page="visits">👥 &nbsp;방문자 통계</a>
-      <a data-page="games">🎮 &nbsp;게임 통계</a>
-      <a data-page="leaderboard">🏆 &nbsp;리더보드</a>
-      <a data-page="manage">⚙️ &nbsp;데이터 관리</a>
+      <a data-page="overview"  class="active"><img class="nav-icon" src="/icons/number-slide.svg">개요</a>
+      <a data-page="visits"><img class="nav-icon" src="/icons/number-hunt.svg">방문자 통계</a>
+      <a data-page="games"><img class="nav-icon" src="/icons/tetris.svg">게임 통계</a>
+      <a data-page="leaderboard"><img class="nav-icon" src="/icons/times-quiz.svg">리더보드</a>
+      <a data-page="manage"><img class="nav-icon" src="/icons/minesweeper.svg">데이터 관리</a>
     </nav>
     <div class="sidebar-bottom">
       <button class="logout-btn" id="btn-logout">로그아웃</button>
@@ -318,11 +342,11 @@
   <!-- ─── BOTTOM NAV (mobile) ─── -->
   <div class="bottom-nav">
     <nav id="bottom-nav-links">
-      <a data-page="overview" class="active"><span class="bn-icon">📊</span>개요</a>
-      <a data-page="visits"><span class="bn-icon">👥</span>방문자</a>
-      <a data-page="games"><span class="bn-icon">🎮</span>게임통계</a>
-      <a data-page="leaderboard"><span class="bn-icon">🏆</span>리더보드</a>
-      <a data-page="manage"><span class="bn-icon">⚙️</span>관리</a>
+      <a data-page="overview" class="active"><img class="bn-icon" src="/icons/number-slide.svg">개요</a>
+      <a data-page="visits"><img class="bn-icon" src="/icons/number-hunt.svg">방문자</a>
+      <a data-page="games"><img class="bn-icon" src="/icons/tetris.svg">게임통계</a>
+      <a data-page="leaderboard"><img class="bn-icon" src="/icons/times-quiz.svg">리더보드</a>
+      <a data-page="manage"><img class="bn-icon" src="/icons/minesweeper.svg">관리</a>
     </nav>
   </div>
 
@@ -330,48 +354,48 @@
 
     <!-- ── Overview ── -->
     <div class="page active" id="page-overview">
-      <div class="page-title">📊 대시보드 <span id="last-updated"></span></div>
+      <div class="page-title"><img src="/icons/number-slide.svg">대시보드 <span id="last-updated"></span></div>
 
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-icon">👁️</div>
+          <div class="stat-icon"><img src="/icons/number-hunt.svg"></div>
           <div class="stat-value" id="stat-today">—</div>
           <div class="stat-label">오늘 방문</div>
         </div>
         <div class="stat-card green">
-          <div class="stat-icon">📅</div>
+          <div class="stat-icon"><img src="/icons/number-pop.svg"></div>
           <div class="stat-value" id="stat-total">—</div>
           <div class="stat-label">총 방문 (14일)</div>
         </div>
         <div class="stat-card blue">
-          <div class="stat-icon">🎮</div>
+          <div class="stat-icon"><img src="/icons/tetris.svg"></div>
           <div class="stat-value" id="stat-plays">—</div>
           <div class="stat-label">총 게임 플레이</div>
         </div>
         <div class="stat-card purple">
-          <div class="stat-icon">🏆</div>
+          <div class="stat-icon"><img src="/icons/times-quiz.svg"></div>
           <div class="stat-value" id="stat-top">—</div>
           <div class="stat-label">인기 게임</div>
         </div>
       </div>
 
       <div class="chart-card">
-        <h2>📈 최근 14일 방문자</h2>
+        <h2><img src="/icons/number-hunt.svg">최근 14일 방문자</h2>
         <canvas id="chart-visits" height="180"></canvas>
       </div>
 
       <div class="chart-card">
-        <h2>🎮 게임별 플레이 수 (상위 10개)</h2>
+        <h2><img src="/icons/tetris.svg">게임별 플레이 수 (상위 10개)</h2>
         <canvas id="chart-plays" height="300"></canvas>
       </div>
     </div>
 
     <!-- ── Visits ── -->
     <div class="page" id="page-visits">
-      <div class="page-title">👥 방문자 통계</div>
+      <div class="page-title"><img src="/icons/number-hunt.svg">방문자 통계</div>
 
       <div class="chart-card">
-        <h2>최근 30일 방문자</h2>
+        <h2><img src="/icons/number-hunt.svg">최근 30일 방문자</h2>
         <canvas id="chart-visits-30" height="200"></canvas>
       </div>
 
@@ -386,10 +410,10 @@
 
     <!-- ── Games ── -->
     <div class="page" id="page-games">
-      <div class="page-title">🎮 게임 통계</div>
+      <div class="page-title"><img src="/icons/tetris.svg">게임 통계</div>
 
       <div class="chart-card">
-        <h2>전체 게임별 플레이 수</h2>
+        <h2><img src="/icons/tetris.svg">전체 게임별 플레이 수</h2>
         <canvas id="chart-plays-all" height="400"></canvas>
       </div>
 
@@ -404,7 +428,7 @@
 
     <!-- ── Leaderboard ── -->
     <div class="page" id="page-leaderboard">
-      <div class="page-title">🏆 리더보드</div>
+      <div class="page-title"><img src="/icons/times-quiz.svg">리더보드</div>
 
       <div class="chart-card">
         <div class="game-select-wrap">
@@ -422,39 +446,39 @@
 
     <!-- ── Manage ── -->
     <div class="page" id="page-manage">
-      <div class="page-title">⚙️ 데이터 관리</div>
+      <div class="page-title"><img src="/icons/minesweeper.svg">데이터 관리</div>
       <p style="font-size:0.85rem;color:var(--muted);margin-top:-10px;">
-        ⚠️ 데이터는 Supabase에 저장됩니다. 삭제하면 복구할 수 없어요.
+        데이터는 Supabase에 저장됩니다. 삭제하면 복구할 수 없어요.
       </p>
 
       <div class="manage-grid">
         <div class="manage-card">
-          <h3>📊 방문자 데이터 초기화</h3>
+          <h3><img src="/icons/number-hunt.svg">방문자 데이터 초기화</h3>
           <p>지금까지 쌓인 모든 날짜별 방문 기록을 삭제합니다.</p>
           <button class="danger-btn" id="btn-clear-visits">방문 데이터 삭제</button>
         </div>
         <div class="manage-card">
-          <h3>🎮 게임 플레이 카운트 초기화</h3>
+          <h3><img src="/icons/tetris.svg">게임 플레이 카운트 초기화</h3>
           <p>모든 게임의 플레이 수 카운터를 초기화합니다.</p>
           <button class="danger-btn" id="btn-clear-plays">플레이 카운트 삭제</button>
         </div>
         <div class="manage-card">
-          <h3>🏆 전체 최고 점수 초기화</h3>
+          <h3><img src="/icons/times-quiz.svg">전체 최고 점수 초기화</h3>
           <p>모든 게임의 개인 최고 점수(하이스코어)를 삭제합니다.</p>
           <button class="danger-btn" id="btn-clear-scores">최고 점수 삭제</button>
         </div>
         <div class="manage-card">
-          <h3>🔄 모든 데이터 초기화</h3>
+          <h3><img src="/icons/number-bomb.svg">모든 데이터 초기화</h3>
           <p>방문 기록, 플레이 카운트, 최고 점수를 모두 삭제합니다.</p>
           <button class="danger-btn" id="btn-clear-all">전체 데이터 삭제</button>
         </div>
         <div class="manage-card">
-          <h3>📤 데이터 내보내기</h3>
+          <h3><img src="/icons/quiz-words.svg">데이터 내보내기</h3>
           <p>현재 저장된 모든 통계 데이터를 JSON 파일로 내보냅니다.</p>
           <button class="safe-btn" id="btn-export">JSON 내보내기</button>
         </div>
         <div class="manage-card">
-          <h3>🔁 대시보드 새로고침</h3>
+          <h3><img src="/icons/breakout.svg">대시보드 새로고침</h3>
           <p>통계 데이터를 다시 불러와 화면을 업데이트합니다.</p>
           <button class="safe-btn" id="btn-refresh">새로고침</button>
         </div>
@@ -573,10 +597,10 @@ function drawVBars(canvas, data) {
   // Grid lines
   for (let i = 0; i <= 4; i++) {
     const y = PAD.top + cH - (cH / 4) * i;
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cW, y); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.font = `${10 * dpr / dpr}px sans-serif`;
     ctx.textAlign = 'right';
     ctx.fillText(Math.round(max / 4 * i), PAD.left - 6, y + 3);
@@ -587,17 +611,14 @@ function drawVBars(canvas, data) {
     const bH  = (d.count / max) * cH;
     const y   = PAD.top + cH - bH;
 
-    // Bar
-    const grad = ctx.createLinearGradient(0, y, 0, PAD.top + cH);
-    grad.addColorStop(0, '#e8630a');
-    grad.addColorStop(1, '#7c2d00');
-    ctx.fillStyle = d.count > 0 ? grad : 'rgba(255,255,255,0.05)';
+    // Bar (flat solid color)
+    ctx.fillStyle = d.count > 0 ? '#e8630a' : 'rgba(0,0,0,0.05)';
     ctx.beginPath();
     ctx.roundRect(x, d.count > 0 ? y : PAD.top + cH - 2, bW, d.count > 0 ? bH : 2, [4, 4, 0, 0]);
     ctx.fill();
 
     // Label
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.font = `10px sans-serif`;
     ctx.textAlign = 'center';
     // Show fewer labels if many data points
@@ -607,7 +628,7 @@ function drawVBars(canvas, data) {
 
     // Value on top
     if (d.count > 0) {
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = '#e8630a';
       ctx.font = `bold 10px sans-serif`;
       ctx.fillText(d.count, x + bW / 2, y - 5);
     }
@@ -636,27 +657,24 @@ function drawHBars(canvas, data) {
     const bW = (d.plays / max) * cW;
 
     // Background track
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
     ctx.beginPath(); ctx.roundRect(PAD.left, y, cW, bH, 4); ctx.fill();
 
-    // Bar
+    // Bar (flat solid color)
     if (d.plays > 0) {
-      const grad = ctx.createLinearGradient(PAD.left, 0, PAD.left + bW, 0);
-      grad.addColorStop(0, d.color || '#e8630a');
-      grad.addColorStop(1, d.color ? d.color + '88' : '#7c2d0088');
-      ctx.fillStyle = grad;
+      ctx.fillStyle = d.color || '#e8630a';
       ctx.beginPath(); ctx.roundRect(PAD.left, y, bW, bH, 4); ctx.fill();
     }
 
     // Game name
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.font = `12px sans-serif`;
     ctx.textAlign = 'right';
     ctx.fillText(`${d.icon} ${d.name}`, PAD.left - 8, y + bH / 2 + 4);
 
     // Value
     if (d.plays > 0) {
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.font = `bold 11px sans-serif`;
       ctx.textAlign = 'left';
       ctx.fillText(`${d.plays}회`, PAD.left + bW + 6, y + bH / 2 + 4);
