@@ -244,6 +244,40 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+  /* ── BOTTOM NAV (mobile) ── */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--sidebar);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+  }
+  .bottom-nav nav {
+    display: flex; height: 100%;
+  }
+  .bottom-nav nav a {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px; color: var(--muted);
+    text-decoration: none; font-size: 0.6rem; font-weight: 600;
+    transition: color 0.15s; cursor: pointer;
+    padding: 6px 0;
+  }
+  .bottom-nav nav a .bn-icon { font-size: 1.25rem; line-height: 1; }
+  .bottom-nav nav a:hover { color: var(--text); }
+  .bottom-nav nav a.active { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+    #dashboard { flex-direction: column; height: auto; min-height: 100vh; }
+    .sidebar { display: none; }
+    .bottom-nav { display: block; }
+    .content {
+      padding: 16px 16px calc(60px + env(safe-area-inset-bottom, 0px)) 16px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -280,6 +314,17 @@
       <button class="logout-btn" id="btn-logout">로그아웃</button>
     </div>
   </aside>
+
+  <!-- ─── BOTTOM NAV (mobile) ─── -->
+  <div class="bottom-nav">
+    <nav id="bottom-nav-links">
+      <a data-page="overview" class="active"><span class="bn-icon">📊</span>개요</a>
+      <a data-page="visits"><span class="bn-icon">👥</span>방문자</a>
+      <a data-page="games"><span class="bn-icon">🎮</span>게임통계</a>
+      <a data-page="leaderboard"><span class="bn-icon">🏆</span>리더보드</a>
+      <a data-page="manage"><span class="bn-icon">⚙️</span>관리</a>
+    </nav>
+  </div>
 
   <main class="content">
 
@@ -745,9 +790,9 @@ function initLeaderboardSelect() {
 /* ─── Navigation ─── */
 function activatePage(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('#nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('#nav-links a, #bottom-nav-links a').forEach(a => a.classList.remove('active'));
   document.getElementById(`page-${pageId}`)?.classList.add('active');
-  document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active');
+  document.querySelectorAll(`[data-page="${pageId}"]`).forEach(a => a.classList.add('active'));
 
   if (pageId === 'overview')    renderOverview().catch(console.error);
   if (pageId === 'visits')      renderVisits().catch(console.error);
@@ -836,6 +881,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = e.target.closest('[data-page]');
     if (a) { e.preventDefault(); activatePage(a.dataset.page); }
   });
+  document.getElementById('bottom-nav-links').addEventListener('click', e => {
+    const a = e.target.closest('[data-page]');
+    if (a) { e.preventDefault(); activatePage(a.dataset.page); }
+  });
 
   /* Logout */
   document.getElementById('btn-logout').addEventListener('click', () => {
@@ -850,7 +899,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-clear-all').addEventListener('click', clearAll);
   document.getElementById('btn-export').addEventListener('click', exportData);
   document.getElementById('btn-refresh').addEventListener('click', () => {
-    activatePage(document.querySelector('#nav-links a.active')?.dataset.page || 'overview');
+    activatePage(document.querySelector('#nav-links a.active, #bottom-nav-links a.active')?.dataset.page || 'overview');
   });
 
   /* Leaderboard game select */
