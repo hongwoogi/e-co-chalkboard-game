@@ -1648,10 +1648,10 @@
         window._gameSettings = { duration: selectedTime, playerCount: effectiveCount, difficulties: _prevDiffs || {}, grade: selectedGrade, semester: selectedSemester };
         window._lastGameConfig = { selectedCount: effectiveCount, variant, selectedGame };
 
-        /* ── Analytics: track game play ── */
-        if (selectedGame) {
-          const pk = `mgr_play_${selectedGame}`;
-          localStorage.setItem(pk, (parseInt(localStorage.getItem(pk) || '0') + 1).toString());
+        /* ── Analytics: track game play via Supabase ── */
+        if (selectedGame && window._supaAnalytics) {
+          const { url, headers } = window._supaAnalytics;
+          fetch(url + '/rest/v1/rpc/track_game_play', { method:'POST', headers, body: JSON.stringify({ p_game_id: selectedGame }) }).catch(()=>{});
         }
 
         const game      = window.getGameById(selectedGame);
@@ -1911,13 +1911,14 @@
       /* ── Visitor counter ── */
       window.VisitorCounter?.init();
 
-      /* ── Analytics: track daily visit ── */
+      /* ── Analytics: track daily visit via Supabase ── */
       (function() {
-        try {
-          const today = new Date().toISOString().slice(0, 10);
-          const vk = `mgr_visit_${today}`;
-          localStorage.setItem(vk, (parseInt(localStorage.getItem(vk) || '0') + 1).toString());
-        } catch(e) {}
+        const SUPA_URL  = 'http://144.24.68.246:8000';
+        const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc0MzU2MTcyLCJleHAiOjE5MzIwMzYxNzJ9.Tte-16sqvVngAJTLJT7o2XNKV4b_WGAhaVtFf7Iy5dY';
+        const H = { 'Content-Type': 'application/json', 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON };
+        const today = new Date().toISOString().slice(0, 10);
+        fetch(SUPA_URL + '/rest/v1/rpc/track_visit', { method:'POST', headers:H, body: JSON.stringify({ p_date: today }) }).catch(()=>{});
+        window._supaAnalytics = { url: SUPA_URL, headers: H };
       })();
 
       /* ── Prevent scroll on game area ── */

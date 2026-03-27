@@ -379,7 +379,7 @@
     <div class="page" id="page-manage">
       <div class="page-title">⚙️ 데이터 관리</div>
       <p style="font-size:0.85rem;color:var(--muted);margin-top:-10px;">
-        ⚠️ 데이터는 이 기기의 브라우저(localStorage)에 저장됩니다. 삭제하면 복구할 수 없어요.
+        ⚠️ 데이터는 Supabase에 저장됩니다. 삭제하면 복구할 수 없어요.
       </p>
 
       <div class="manage-grid">
@@ -422,6 +422,25 @@
 <script>
 'use strict';
 
+/* ─── Supabase config ─── */
+const SUPA_URL  = 'http://144.24.68.246:8000';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc0MzU2MTcyLCJleHAiOjE5MzIwMzYxNzJ9.Tte-16sqvVngAJTLJT7o2XNKV4b_WGAhaVtFf7Iy5dY';
+const SUPA_SVC  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NzQzNTYxNzIsImV4cCI6MTkzMjAzNjE3Mn0.-iSua0W6SzqY7FgpVAqAqysF4uUqOPli7BaNZsX7xn0';
+
+function supaHeaders(key) {
+  return { 'Content-Type': 'application/json', 'apikey': key, 'Authorization': 'Bearer ' + key };
+}
+async function supaGet(path, useService = false) {
+  const key = useService ? SUPA_SVC : SUPA_ANON;
+  const r = await fetch(SUPA_URL + path, { headers: supaHeaders(key) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function supaDelete(path) {
+  const r = await fetch(SUPA_URL + path, { method: 'DELETE', headers: supaHeaders(SUPA_SVC) });
+  if (!r.ok) throw new Error(await r.text());
+}
+
 /* ─── Auth ─── */
 const ADMIN_ID = 'hong';
 const ADMIN_PW = 'ghdtjddnr1025!';
@@ -458,24 +477,29 @@ const GAMES = [
   { id: 'minesweeper',     name: '지뢰찾기',          icon: '💣', color: '#78909c' },
 ];
 
-/* ─── Data helpers ─── */
-function getVisitData(days) {
+/* ─── Data helpers (Supabase) ─── */
+async function getVisitData(days) {
+  const from = new Date();
+  from.setDate(from.getDate() - days + 1);
+  const fromStr = from.toISOString().slice(0, 10);
+  const rows = await supaGet(`/rest/v1/analytics_visits?date=gte.${fromStr}&order=date.asc`);
+  const byDate = Object.fromEntries(rows.map(r => [r.date, r.count]));
+
   const result = [];
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = new Date(); d.setDate(d.getDate() - i);
     const iso   = d.toISOString().slice(0, 10);
     const label = `${d.getMonth() + 1}/${d.getDate()}`;
-    result.push({ iso, label, count: parseInt(localStorage.getItem(`mgr_visit_${iso}`) || '0') });
+    result.push({ iso, label, count: byDate[iso] || 0 });
   }
   return result;
 }
 
-function getPlayData() {
-  return GAMES.map(g => ({
-    ...g,
-    plays: parseInt(localStorage.getItem(`mgr_play_${g.id}`) || '0'),
-  })).sort((a, b) => b.plays - a.plays);
+async function getPlayData() {
+  const rows = await supaGet('/rest/v1/analytics_game_plays?order=count.desc');
+  const byId = Object.fromEntries(rows.map(r => [r.game_id, r.count]));
+  return GAMES.map(g => ({ ...g, plays: byId[g.id] || 0 }))
+              .sort((a, b) => b.plays - a.plays);
 }
 
 function getHighScores(gameId) {
@@ -601,9 +625,8 @@ function drawHBars(canvas, data) {
 }
 
 /* ─── Render pages ─── */
-function renderOverview() {
-  const visits  = getVisitData(14);
-  const plays   = getPlayData();
+async function renderOverview() {
+  const [visits, plays] = await Promise.all([getVisitData(14), getPlayData()]);
   const today   = visits[visits.length - 1].count;
   const total   = visits.reduce((s, v) => s + v.count, 0);
   const totPlay = plays.reduce((s, g) => s + g.plays, 0);
@@ -628,8 +651,8 @@ function renderOverview() {
   }, 50);
 }
 
-function renderVisits() {
-  const visits = getVisitData(30);
+async function renderVisits() {
+  const visits = await getVisitData(30);
   setTimeout(() => {
     const cv = document.getElementById('chart-visits-30');
     if (cv.offsetWidth) drawVBars(cv, visits);
@@ -655,8 +678,8 @@ function renderVisits() {
   }).join('') || '<tr class="empty-row"><td colspan="3">방문 데이터가 없어요</td></tr>';
 }
 
-function renderGames() {
-  const plays = getPlayData();
+async function renderGames() {
+  const plays = await getPlayData();
   const total = Math.max(plays.reduce((s, g) => s + g.plays, 0), 1);
 
   setTimeout(() => {
@@ -716,24 +739,28 @@ function activatePage(pageId) {
   document.getElementById(`page-${pageId}`)?.classList.add('active');
   document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active');
 
-  if (pageId === 'overview')    renderOverview();
-  if (pageId === 'visits')      renderVisits();
-  if (pageId === 'games')       renderGames();
+  if (pageId === 'overview')    renderOverview().catch(console.error);
+  if (pageId === 'visits')      renderVisits().catch(console.error);
+  if (pageId === 'games')       renderGames().catch(console.error);
   if (pageId === 'leaderboard') renderLeaderboard(document.getElementById('lb-game-select')?.value || GAMES[0].id);
 }
 
 /* ─── Manage actions ─── */
-function clearVisits() {
+async function clearVisits() {
   if (!confirm('방문 데이터를 모두 삭제할까요?')) return;
-  Object.keys(localStorage).filter(k => k.startsWith('mgr_visit_')).forEach(k => localStorage.removeItem(k));
-  alert('삭제 완료!');
-  renderOverview();
+  try {
+    await supaDelete('/rest/v1/analytics_visits?date=gte.2000-01-01');
+    alert('삭제 완료!');
+    renderOverview().catch(console.error);
+  } catch(e) { alert('오류: ' + e.message); }
 }
-function clearPlays() {
+async function clearPlays() {
   if (!confirm('플레이 카운트를 초기화할까요?')) return;
-  Object.keys(localStorage).filter(k => k.startsWith('mgr_play_')).forEach(k => localStorage.removeItem(k));
-  alert('초기화 완료!');
-  renderOverview();
+  try {
+    await supaDelete('/rest/v1/analytics_game_plays?game_id=neq.___none___');
+    alert('초기화 완료!');
+    renderOverview().catch(console.error);
+  } catch(e) { alert('오류: ' + e.message); }
 }
 function clearScores() {
   if (!confirm('모든 최고 점수를 삭제할까요?')) return;
@@ -742,32 +769,30 @@ function clearScores() {
   });
   alert('삭제 완료!');
 }
-function clearAll() {
+async function clearAll() {
   if (!confirm('⚠️ 모든 데이터(방문, 플레이, 점수)를 삭제할까요? 되돌릴 수 없어요.')) return;
-  clearVisits(); clearPlays(); clearScores();
+  await clearVisits(); await clearPlays(); clearScores();
 }
-function exportData() {
-  const data = {
-    exportedAt: new Date().toISOString(),
-    visits:     {},
-    plays:      {},
-    scores:     {},
-  };
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith('mgr_visit_')) data.visits[k.replace('mgr_visit_','')] = parseInt(localStorage.getItem(k));
-    if (k.startsWith('mgr_play_'))  data.plays[k.replace('mgr_play_','')]   = parseInt(localStorage.getItem(k));
-  });
-  GAMES.forEach(g => {
-    for (let p = 0; p < 4; p++) {
-      const v = localStorage.getItem(`${g.id}-score-p${p}`);
-      if (v) data.scores[`${g.id}-p${p}`] = parseInt(v);
-    }
-  });
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `chalkboard-stats-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
+async function exportData() {
+  try {
+    const [visitRows, playRows] = await Promise.all([
+      supaGet('/rest/v1/analytics_visits?order=date.asc'),
+      supaGet('/rest/v1/analytics_game_plays?order=count.desc'),
+    ]);
+    const scores = {};
+    GAMES.forEach(g => {
+      for (let p = 0; p < 4; p++) {
+        const v = localStorage.getItem(`${g.id}-score-p${p}`);
+        if (v) scores[`${g.id}-p${p}`] = parseInt(v);
+      }
+    });
+    const data = { exportedAt: new Date().toISOString(), visits: visitRows, plays: playRows, scores };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chalkboard-stats-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  } catch(e) { alert('내보내기 오류: ' + e.message); }
 }
 
 /* ─── Boot ─── */
@@ -791,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard').classList.add('visible');
     initLeaderboardSelect();
-    renderOverview();
+    renderOverview().catch(console.error);
   }
 
   if (isLoggedIn()) showDashboard();
