@@ -421,7 +421,7 @@
 
       <div class="chart-card">
         <h2><img src="/icons/number-hunt.svg">최근 30일 방문자</h2>
-        <canvas id="chart-visits-30" height="160"></canvas>
+        <canvas id="chart-visits-30" height="80"></canvas>
       </div>
 
       <div class="table-card">
@@ -437,17 +437,19 @@
     <div class="page" id="page-games">
       <div class="page-title"><img src="/icons/tetris.svg">게임 통계</div>
 
-      <div class="chart-card">
-        <h2><img src="/icons/tetris.svg">전체 게임별 플레이 수</h2>
-        <canvas id="chart-plays-all" height="200"></canvas>
-      </div>
+      <div class="chart-row">
+        <div class="chart-card">
+          <h2><img src="/icons/tetris.svg">전체 게임별 플레이 수</h2>
+          <canvas id="chart-plays-all" height="340"></canvas>
+        </div>
 
-      <div class="table-card">
-        <h2>게임별 플레이 수</h2>
-        <table>
-          <thead><tr><th>순위</th><th>게임</th><th>플레이 수</th><th>비율</th></tr></thead>
-          <tbody id="games-table-body"></tbody>
-        </table>
+        <div class="table-card">
+          <h2>게임별 플레이 수</h2>
+          <table>
+            <thead><tr><th>순위</th><th>게임</th><th>플레이 수</th><th>비율</th></tr></thead>
+            <tbody id="games-table-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
