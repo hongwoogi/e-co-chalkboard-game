@@ -154,7 +154,7 @@
     const overlay = el('div', {
       style: `position:absolute;inset:0;display:none;flex-direction:column;
               align-items:center;justify-content:center;text-align:center;
-              background:rgba(10,20,30,0.92);backdrop-filter:blur(4px);padding:20px;`,
+              background:rgba(255,253,248,0.96);backdrop-filter:blur(6px);padding:20px;`,
     });
 
     container.append(header, center, overlay);
@@ -222,7 +222,7 @@
       phase = 'pressed';
       tapBtn.disabled = true;
       showOverlay(`
-        <div style="font-size:1rem;color:#888;margin-bottom:8px;">반응속도</div>
+        <div style="font-size:1rem;color:#7a5535;margin-bottom:8px;">반응속도</div>
         <div style="font-size:3rem;font-weight:bold;color:#1a1a2e;">${ms}ms</div>
         <div style="font-size:1.5rem;font-weight:bold;color:${result.color};margin-top:8px;">${result.label}</div>
         <div style="font-size:1.2rem;color:${result.color};margin-top:4px;">+${result.pts}점</div>
@@ -265,7 +265,7 @@
         showOverlay(`
           <div style="font-size:2rem;">⏰</div>
           <div style="font-size:1rem;color:#f87171;margin-top:8px;">시간이 지났어요</div>
-          <div style="font-size:0.9rem;color:#888;margin-top:4px;">+0점</div>
+          <div style="font-size:0.9rem;color:#999;margin-top:4px;">+0점</div>
         `);
       },
 
@@ -276,7 +276,7 @@
         const isWinner = myScore === maxScore && myScore > 0;
         showOverlay(`
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '⚡'}</div>
-          <div style="font-size:1rem;color:#fdd34d;margin-top:10px;">게임 종료</div>
+          <div style="font-size:1rem;color:#c0852a;margin-top:10px;">게임 종료</div>
           <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#1a1a2e;">총점: ${myScore}</div>
           ${isWinner && totalPlayers > 1 ? '<div style="color:#4ade80;font-size:0.85rem;margin-top:8px;">🥇 가장 빠른 반응!</div>' : ''}
         `);
