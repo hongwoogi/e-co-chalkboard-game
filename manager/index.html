@@ -185,6 +185,14 @@
   .chart-card canvas {
     width: 100%; display: block;
   }
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 700px) {
+    .chart-row { grid-template-columns: 1fr; }
+  }
 
   /* ── TABLE ── */
   .table-card {
@@ -394,14 +402,16 @@
         </div>
       </div>
 
-      <div class="chart-card">
-        <h2><img src="/icons/number-hunt.svg">최근 14일 방문자</h2>
-        <canvas id="chart-visits" height="180"></canvas>
-      </div>
+      <div class="chart-row">
+        <div class="chart-card">
+          <h2><img src="/icons/number-hunt.svg">최근 14일 방문자</h2>
+          <canvas id="chart-visits" height="220"></canvas>
+        </div>
 
-      <div class="chart-card">
-        <h2><img src="/icons/tetris.svg">게임별 플레이 수 (상위 10개)</h2>
-        <canvas id="chart-plays" height="300"></canvas>
+        <div class="chart-card">
+          <h2><img src="/icons/tetris.svg">게임별 플레이 수 (상위 10개)</h2>
+          <canvas id="chart-plays" height="220"></canvas>
+        </div>
       </div>
     </div>
 
