@@ -80,6 +80,12 @@
         }
       },
 
+      playerTappedEarly(playerIndex) {
+        clearTimeout(flashTimer);
+        clearTimeout(roundTimer);
+        endGame();
+      },
+
       isFlashed() { return flashed; },
       getFlashedAt() { return flashedAt; },
       destroy() { clearTimeout(flashTimer); clearTimeout(roundTimer); panels = []; },
@@ -169,14 +175,16 @@
     /* ── Button tap ───────────────────────────────────────────── */
     tapBtn.addEventListener('click', () => {
       if (phase === 'waiting_flash') {
-        /* Tapped too early */
+        /* Tapped too early — end game immediately */
         tooEarly = true;
         phase = 'too_early';
+        dead = true;
         setWaiting();
         msgEl.textContent = '너무 일찍!';
         msgEl.style.color = '#f87171';
         tapBtn.disabled = true;
-        timeEl.textContent = '초록불을 기다려요!';
+        timeEl.textContent = '';
+        coord.playerTappedEarly(playerIndex);
         return;
       }
       if (phase !== 'flash' || dead) return;
@@ -242,7 +250,13 @@
         phase = 'gameover';
         const maxScore = Math.max(0, ...Object.values(coord._scores));
         const isWinner = myScore === maxScore && myScore > 0;
-        showOverlay(`
+        const earlyOut = tooEarly;
+        showOverlay(earlyOut ? `
+          <div style="font-size:2.5rem;">🚫</div>
+          <div style="font-size:1.1rem;color:#f87171;margin-top:10px;font-weight:bold;">너무 일찍 눌렀어요!</div>
+          <div style="font-size:0.9rem;color:#888;margin-top:6px;">초록불이 켜질 때까지 기다려야 해요</div>
+          <div style="font-size:1.8rem;font-weight:bold;margin-top:12px;color:#1a1a2e;">총점: ${myScore}</div>
+        ` : `
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '⚡'}</div>
           <div style="font-size:1rem;color:#fdd34d;margin-top:10px;">게임 종료</div>
           <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#1a1a2e;">총점: ${myScore}</div>
