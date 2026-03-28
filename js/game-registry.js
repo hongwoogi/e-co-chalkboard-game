@@ -267,6 +267,17 @@ const GAMES = [
     entryFile:   'snake/game.js',
   },
   {
+    id:          'gomoku',
+    name:        '오목',
+    icon:        '⚫',
+    description: '다같이 두는 오목! 1·2·4인 지원, 5목을 먼저 완성하세요!',
+    color:       '#dcb483',
+    isNew:       true,
+    isHot:       true,
+    available:   true,
+    entryFile:   'gomoku/game.js',
+  },
+  {
     id:          'minesweeper',
     name:        '지뢰찾기',
     icon:        '💣',
