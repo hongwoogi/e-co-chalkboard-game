@@ -74,8 +74,9 @@ window.getAvailableGames = getAvailableGames;
   const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc0MzU2MTcyLCJleHAiOjE5MzIwMzYxNzJ9.Tte-16sqvVngAJTLJT7o2XNKV4b_WGAhaVtFf7Iy5dY';
 
   try {
+    /* games_sorted view: LEFT JOIN with analytics_game_plays, ordered by play_count DESC */
     const res = await fetch(
-      `${SUPA_URL}/rest/v1/games?available=eq.true&order=display_order`,
+      `${SUPA_URL}/rest/v1/games_sorted`,
       { headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` } }
     );
     if (!res.ok) return;
