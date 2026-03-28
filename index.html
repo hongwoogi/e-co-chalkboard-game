@@ -525,37 +525,28 @@
       overflow: visible;
     }
 
-    /* ── Unified doodle icon animation ── */
-    @keyframes icon-pulse {
-      0%   { fill: var(--ic, #ff8c42); opacity: 1; }
-      30%  { fill: color-mix(in srgb, var(--ic, #ff8c42) 55%, white); opacity: 0.85; }
-      65%  { fill: #1a1008; opacity: 1; }
-      85%  { fill: color-mix(in srgb, var(--ic, #ff8c42) 80%, #1a1008); opacity: 0.9; }
-      100% { fill: var(--ic, #ff8c42); opacity: 1; }
+    /* ── Unified doodle icon draw animation ── */
+    @keyframes icon-draw-loop {
+      0%, 4%   { stroke-dashoffset: 8000; fill: transparent; stroke-opacity: 1; }
+      55%      { stroke-dashoffset: 0;    fill: transparent; stroke-opacity: 1; }
+      70%      { stroke-dashoffset: 0;    fill: var(--ic, #ff8c42); stroke-opacity: 0; }
+      85%      { stroke-dashoffset: 0;    fill: #1a1008; stroke-opacity: 0; }
+      96%,100% { stroke-dashoffset: 8000; fill: #1a1008; stroke-opacity: 0; }
     }
 
     /* Default: all .ip elements show in card color */
     .card-icon-wrap svg .ip {
       fill: var(--ic, #ff8c42);
-      stroke: none;
-      transition: fill 0.3s;
-    }
-    /* Preserve stroke-only elements (fill="none") */
-    .card-icon-wrap svg .ip[fill="none"] {
-      fill: none;
       stroke: var(--ic, #ff8c42);
-      stroke-width: inherit;
+      stroke-width: 6;
+      stroke-dasharray: 8000;
+      stroke-dashoffset: 0;
     }
 
     /* Animate on hover / selected */
     .game-card:hover .card-icon-wrap svg .ip,
     .game-card.selected .card-icon-wrap svg .ip {
-      animation: icon-pulse 2s ease-in-out infinite;
-    }
-    .game-card:hover .card-icon-wrap svg .ip[fill="none"],
-    .game-card.selected .card-icon-wrap svg .ip[fill="none"] {
-      animation: none;
-      stroke: var(--ic, #ff8c42);
+      animation: icon-draw-loop 3.5s ease-in-out infinite;
     }
 
     /* Name */
