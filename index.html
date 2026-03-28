@@ -525,27 +525,37 @@
       overflow: visible;
     }
 
-    /* ── Stroke draw-loop animation ── */
-    @keyframes icon-draw-loop {
-      0%, 4%   { stroke-dashoffset: 3000; fill: transparent;       stroke-opacity: 1; }
-      48%      { stroke-dashoffset: 0;    fill: transparent;       stroke-opacity: 1; }
-      68%      { stroke-dashoffset: 0;    fill: var(--ic,#ff8c42); stroke-opacity: 0; }
-      84%      { stroke-dashoffset: 0;    fill: #1a1008;           stroke-opacity: 0; }
-      96%,100% { stroke-dashoffset: 3000; fill: #1a1008;           stroke-opacity: 0; }
+    /* ── Unified doodle icon animation ── */
+    @keyframes icon-pulse {
+      0%   { fill: var(--ic, #ff8c42); opacity: 1; }
+      30%  { fill: color-mix(in srgb, var(--ic, #ff8c42) 55%, white); opacity: 0.85; }
+      65%  { fill: #1a1008; opacity: 1; }
+      85%  { fill: color-mix(in srgb, var(--ic, #ff8c42) 80%, #1a1008); opacity: 0.9; }
+      100% { fill: var(--ic, #ff8c42); opacity: 1; }
     }
 
-    /* Default state: filled with card color */
+    /* Default: all .ip elements show in card color */
     .card-icon-wrap svg .ip {
-      stroke: var(--ic, #ff8c42);
-      stroke-width: 4;
-      stroke-dasharray: 3000;
       fill: var(--ic, #ff8c42);
+      stroke: none;
+      transition: fill 0.3s;
+    }
+    /* Preserve stroke-only elements (fill="none") */
+    .card-icon-wrap svg .ip[fill="none"] {
+      fill: none;
+      stroke: var(--ic, #ff8c42);
+      stroke-width: inherit;
     }
 
-    /* Animation only on hover or selected card */
+    /* Animate on hover / selected */
     .game-card:hover .card-icon-wrap svg .ip,
     .game-card.selected .card-icon-wrap svg .ip {
-      animation: icon-draw-loop 3s ease-in-out infinite;
+      animation: icon-pulse 2s ease-in-out infinite;
+    }
+    .game-card:hover .card-icon-wrap svg .ip[fill="none"],
+    .game-card.selected .card-icon-wrap svg .ip[fill="none"] {
+      animation: none;
+      stroke: var(--ic, #ff8c42);
     }
 
     /* Name */
@@ -1229,6 +1239,44 @@
         }
       });
 
+      /* ── SVG icon cache & inline injector ────────────────────── */
+      const _svgCache = {};
+      async function injectSVGIcons() {
+        const cards = [...document.querySelectorAll('.game-card[data-svg-icon]')];
+        const paths = [...new Set(cards.map(c => c.dataset.svgIcon))];
+
+        await Promise.all(paths.map(async path => {
+          if (_svgCache[path]) return;
+          try {
+            const res = await fetch(path + '?v=1');
+            if (!res.ok) return;
+            _svgCache[path] = await res.text();
+          } catch (_) {}
+        }));
+
+        cards.forEach(card => {
+          const svgText = _svgCache[card.dataset.svgIcon];
+          if (!svgText) return;
+          const wrap = card.querySelector('.card-icon-wrap');
+          if (!wrap || wrap.querySelector('svg')) return;
+
+          /* Parse, make clip-path IDs unique, then inline */
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svgText, 'image/svg+xml');
+          const uid = card.dataset.game;
+          doc.querySelectorAll('[id]').forEach(el => {
+            const old = el.id;
+            el.id = `${uid}_${old}`;
+            doc.querySelectorAll(`[clip-path="url(#${old})"]`).forEach(r =>
+              r.setAttribute('clip-path', `url(#${uid}_${old})`));
+          });
+          const svg = doc.documentElement;
+          svg.style.cssText = 'width:41%;height:41%;overflow:visible;';
+          wrap.innerHTML = '';
+          wrap.appendChild(svg);
+        });
+      }
+
       /* ── Dynamic game card rendering ─────────────────────────── */
       function renderGameCards() {
         const grid = document.getElementById('game-grid');
@@ -1243,6 +1291,7 @@
           card.dataset.game     = g.id;
           card.dataset.category = g.category || '';
           card.dataset.color    = g.colorName || 'amber';
+          if (g.svgIcon) card.dataset.svgIcon = g.svgIcon;
 
           let diffRow = '';
           if (g.difficulties?.length) {
@@ -1252,9 +1301,10 @@
             diffRow = `<div class="card-diff-row">${btns}</div>`;
           }
 
+          /* Icon: placeholder emoji shown immediately; SVG injected async */
           card.innerHTML = `
             <span class="card-tag">${g.category || ''}</span>
-            <div class="card-icon-wrap"><span style="font-size:clamp(1.8rem,5vw,3rem);line-height:1;">${g.icon}</span></div>
+            <div class="card-icon-wrap"><span style="font-size:clamp(1.8rem,5vw,3rem);line-height:1;opacity:0.4;">${g.icon}</span></div>
             <div class="card-text"><div class="card-name">${g.name}</div></div>
             ${diffRow}
           `;
@@ -1268,6 +1318,7 @@
         if (toSelect) { toSelect.classList.add('selected'); selectedGame = toSelect.dataset.game; }
 
         setupGameCardListeners();
+        injectSVGIcons(); /* async — replaces emoji placeholders with doodle SVGs */
       }
 
       function setupGameCardListeners() {

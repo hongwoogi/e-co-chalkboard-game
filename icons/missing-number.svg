@@ -1,0 +1,11 @@
+<svg viewBox="0 0 155 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect class="ip" x="10" y="52" width="36" height="36" rx="8" stroke="black" stroke-width="10" fill="none"/>
+<rect class="ip" x="60" y="52" width="36" height="36" rx="8" stroke="black" stroke-width="10" fill="none"/>
+<rect class="ip" x="110" y="52" width="36" height="36" rx="8" stroke="black" stroke-width="10" fill="none"/>
+<line class="ip" x1="46" y1="70" x2="60" y2="70" stroke="black" stroke-width="8" stroke-linecap="round"/>
+<line class="ip" x1="96" y1="70" x2="110" y2="70" stroke="black" stroke-width="8" stroke-linecap="round"/>
+<text class="ip" x="22" y="76" font-size="18" font-weight="bold" fill="black" font-family="monospace" dominant-baseline="middle">1</text>
+<text class="ip" x="72" y="76" font-size="18" font-weight="bold" fill="black" font-family="monospace" dominant-baseline="middle">?</text>
+<text class="ip" x="120" y="76" font-size="18" font-weight="bold" fill="black" font-family="monospace" dominant-baseline="middle">3</text>
+<path class="ip" d="M50 110 Q77 130 105 110" stroke="black" stroke-width="7" stroke-linecap="round" fill="none"/>
+</svg>

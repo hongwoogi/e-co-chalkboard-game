@@ -1,0 +1,6 @@
+<svg viewBox="0 0 155 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect class="ip" x="60" y="18" width="35" height="90" rx="10" stroke="black" stroke-width="10" fill="none"/>
+<polygon class="ip" points="60,108 95,108 77,138" stroke="black" stroke-width="8" stroke-linejoin="round" fill="none"/>
+<line class="ip" x1="60" y1="42" x2="95" y2="42" stroke="black" stroke-width="8"/>
+<path class="ip" d="M25 90 Q40 75 55 90 Q70 105 85 85" stroke="black" stroke-width="7" stroke-linecap="round" fill="none"/>
+</svg>

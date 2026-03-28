@@ -1,0 +1,8 @@
+<svg viewBox="0 0 155 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect class="ip" x="58" y="8" width="39" height="16" rx="6" fill="black"/>
+<rect class="ip" x="72" y="22" width="11" height="16" fill="black"/>
+<circle class="ip" cx="77" cy="95" r="52" stroke="black" stroke-width="12" fill="none"/>
+<line class="ip" x1="77" y1="95" x2="77" y2="58" stroke="black" stroke-width="8" stroke-linecap="round"/>
+<line class="ip" x1="77" y1="95" x2="108" y2="95" stroke="black" stroke-width="6" stroke-linecap="round"/>
+<circle class="ip" cx="77" cy="95" r="6" fill="black"/>
+</svg>
