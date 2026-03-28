@@ -201,7 +201,7 @@
         scoreEl.textContent = `점수: ${myScore}`;
         showOverlay(`
           <div style="font-size:0.9rem;color:#f87171;margin-bottom:6px;">⚠️ 너무 일찍!</div>
-          <div style="font-size:2.5rem;font-weight:bold;color:#1a1a2e;">${earlyMs}ms 빠름</div>
+          <div style="font-size:2.5rem;font-weight:bold;color:#1a1a2e;">${Math.round(earlyMs)}ms 빠름</div>
           <div style="font-size:1.4rem;font-weight:bold;color:${result.color};margin-top:8px;">${result.label}</div>
           <div style="font-size:1.1rem;color:${result.color};margin-top:4px;">+${result.pts}점</div>
         `);
