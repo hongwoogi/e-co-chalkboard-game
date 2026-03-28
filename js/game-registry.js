@@ -41,6 +41,9 @@ const GAMES_FALLBACK = [
 
 /* Normalise a raw DB row (snake_case) → app object (camelCase) */
 function normaliseRow(r) {
+  /* Preserve any extra flags (singlePanel, etc.) defined in GAMES_FALLBACK
+     that have no corresponding DB column. */
+  const fb = GAMES_FALLBACK.find(g => g.id === r.id) || {};
   return {
     id:          r.id,
     name:        r.name,
@@ -56,6 +59,7 @@ function normaliseRow(r) {
     entryFile:   r.entry_file,
     svgIcon:     r.svg_icon || undefined,
     difficulties: r.difficulties || undefined,
+    singlePanel: fb.singlePanel || false,
   };
 }
 
