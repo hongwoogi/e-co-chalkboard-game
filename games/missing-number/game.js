@@ -51,7 +51,7 @@
       if (w > 0 && w !== answer) wrong.add(w);
     }
 
-    const choices = shuffle([answer, ...wrong]);
+    const choices = [answer, ...wrong].sort((a, b) => a - b);
     return { seq, missIdx, answer, choices, step };
   }
 
@@ -62,16 +62,17 @@
 
   const REACTIONS_OK  = ['🎉','⭐','✨','🌟','💫','👍','🥳'];
   const REACTIONS_BAD = ['😅','💨','🙈','😬','🫣'];
-  const TOTAL_ROUNDS  = 10;
-  const BASE_TIME     = 8000; // ms
+  const BASE_TIME     = 8000; // ms per question
 
   /* ── init ───────────────────────────────────────────────────── */
   function init(container, options) {
     const { playerIndex = 0, playerColor = '#7ed3ff', onGameOver } = options || {};
 
+    const gameDuration = (window._gameSettings?.duration || 60) * 1000; // ms
     let round = 0, score = 0, dead = false;
     let stepStart = 0, roundActive = false;
-    let autoTimer = null;
+    let autoTimer = null, gameTimer = null;
+    const gameStart = Date.now();
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
@@ -85,9 +86,10 @@
       flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
       padding:8px 14px;background:rgba(0,0,0,0.06);border-bottom:2px solid rgba(0,0,0,0.08);
     `);
-    const roundEl = el('div', `font-size:0.75rem;color:#888;font-family:var(--font-body);`);
-    const scoreEl = el('div', `font-size:1rem;font-weight:bold;color:${playerColor};font-family:var(--font-display);`);
-    header.append(roundEl, scoreEl);
+    const roundEl  = el('div', `font-size:0.75rem;color:#888;font-family:var(--font-body);`);
+    const timerEl  = el('div', `font-size:0.85rem;font-weight:bold;color:#888;font-family:var(--font-display);`);
+    const scoreEl  = el('div', `font-size:1rem;font-weight:bold;color:${playerColor};font-family:var(--font-display);`);
+    header.append(roundEl, timerEl, scoreEl);
 
     /* Timer bar */
     const timerWrap = el('div', `flex-shrink:0;height:6px;background:rgba(0,0,0,0.07);overflow:hidden;`);
@@ -118,17 +120,27 @@
     container.append(header, timerWrap, seqArea, reactionEl, choicesGrid);
 
     /* ── Round logic ──────────────────────────────────────────── */
+    /* Game-level countdown timer */
+    gameTimer = setInterval(() => {
+      if (dead) { clearInterval(gameTimer); return; }
+      const remaining = Math.ceil((gameDuration - (Date.now() - gameStart)) / 1000);
+      const secs = Math.max(0, remaining);
+      timerEl.textContent = `⏱ ${secs}s`;
+      timerEl.style.color = secs <= 10 ? '#f87171' : '#888';
+      if (secs <= 0) { clearInterval(gameTimer); if (!dead) endGame(); }
+    }, 200);
+
     function startRound() {
       if (dead) return;
+      if (Date.now() - gameStart >= gameDuration) { endGame(); return; }
       round++;
-      if (round > TOTAL_ROUNDS) { endGame(); return; }
 
       roundActive = true;
       stepStart = Date.now();
       const q = makeQuestion(round);
 
       /* Update header */
-      roundEl.textContent = `${round} / ${TOTAL_ROUNDS} 라운드`;
+      roundEl.textContent = `${round}번째 문제`;
       scoreEl.textContent = `${score}점`;
       reactionEl.textContent = '';
 
@@ -256,6 +268,7 @@
     function endGame() {
       dead = true;
       clearInterval(autoTimer);
+      clearInterval(gameTimer);
 
       choicesGrid.innerHTML = '';
       seqArea.innerHTML = '';
@@ -279,7 +292,7 @@
     /* ── Start ── */
     startRound();
 
-    return { destroy() { dead = true; clearInterval(autoTimer); container.innerHTML = ''; } };
+    return { destroy() { dead = true; clearInterval(autoTimer); clearInterval(gameTimer); container.innerHTML = ''; } };
   }
 
   /* ── DOM helper ──────────────────────────────────────────────── */
