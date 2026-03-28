@@ -146,6 +146,22 @@
 
     container.append(header, center, overlay);
 
+    /* ── Early tap: listen on the whole container ─────────────── */
+    function handleEarlyTap(e) {
+      if (phase !== 'waiting_flash') return;
+      e.preventDefault();
+      tooEarly = true;
+      phase = 'too_early';
+      dead = true;
+      setWaiting();
+      msgEl.textContent = '너무 일찍!';
+      msgEl.style.color = '#f87171';
+      timeEl.textContent = '';
+      coord.playerTappedEarly(playerIndex);
+    }
+    container.addEventListener('touchend', handleEarlyTap, { passive: false });
+    container.addEventListener('click',    handleEarlyTap);
+
     /* ── Helpers ──────────────────────────────────────────────── */
     function setWaiting() {
       container.style.background = '#f7f3ee';
@@ -173,20 +189,8 @@
     function hideOverlay()     { overlay.style.display = 'none'; }
 
     /* ── Button tap ───────────────────────────────────────────── */
-    tapBtn.addEventListener('click', () => {
-      if (phase === 'waiting_flash') {
-        /* Tapped too early — end game immediately */
-        tooEarly = true;
-        phase = 'too_early';
-        dead = true;
-        setWaiting();
-        msgEl.textContent = '너무 일찍!';
-        msgEl.style.color = '#f87171';
-        tapBtn.disabled = true;
-        timeEl.textContent = '';
-        coord.playerTappedEarly(playerIndex);
-        return;
-      }
+    tapBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); /* prevent container handler from double-firing */
       if (phase !== 'flash' || dead) return;
       /* Reject if the press started before the flash (finger was already on button) */
       if (pressedAt < enabledAt) return;
