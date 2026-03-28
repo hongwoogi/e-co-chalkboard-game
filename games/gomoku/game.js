@@ -88,18 +88,19 @@
     /* Bottom turn bar */
     const bottomBar = el('div', {
       style: 'flex-shrink:0;display:flex;align-items:center;justify-content:center;' +
-             'gap:10px;padding:10px 14px;transition:background 0.3s;border-top:2px solid rgba(0,0,0,0.12);',
+             'gap:14px;padding:14px 20px;transition:background 0.3s;border-top:3px solid rgba(0,0,0,0.15);',
     });
     const stoneDot = el('div', {
-      style: 'width:22px;height:22px;border-radius:50%;flex-shrink:0;transition:background 0.3s,border-color 0.3s;',
+      style: 'width:40px;height:40px;border-radius:50%;flex-shrink:0;' +
+             'transition:background 0.3s,border-color 0.3s,box-shadow 0.3s;',
     });
     const turnLabel = el('div', {
-      style: 'font-size:1rem;font-weight:bold;letter-spacing:1px;transition:color 0.3s;',
+      style: 'font-size:1.6rem;font-weight:900;letter-spacing:2px;transition:color 0.3s;line-height:1.1;',
     });
     const turnSub = el('div', {
-      style: 'font-size:0.75rem;opacity:0.65;transition:color 0.3s;',
+      style: 'font-size:0.85rem;font-weight:600;opacity:0.7;transition:color 0.3s;',
     });
-    const labelWrap = el('div', { style: 'display:flex;flex-direction:column;gap:2px;' });
+    const labelWrap = el('div', { style: 'display:flex;flex-direction:column;gap:4px;' });
     labelWrap.append(turnLabel, turnSub);
     bottomBar.append(stoneDot, labelWrap);
     container.append(canvasWrap, bottomBar);
@@ -198,8 +199,8 @@
         : '';
 
       stoneDot.style.background   = st.fill;
-      stoneDot.style.border       = `2px solid ${st.border}`;
-      stoneDot.style.boxShadow    = `0 0 10px 3px ${st.fill}99`;
+      stoneDot.style.border       = `3px solid ${st.border}`;
+      stoneDot.style.boxShadow    = `0 0 18px 6px ${st.fill}bb`;
     }
 
     applyTurnUI();
