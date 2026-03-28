@@ -171,6 +171,13 @@
     /* Equal-width chips for player/time rows */
     #player-chips .chip, #time-chips .chip { flex: 1; }
 
+    /* Disabled player chip */
+    .chip.disabled {
+      opacity: 0.28;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
     /* Active chip styles */
     #player-chips .chip.active {
       background: #4f86f7;
@@ -1318,6 +1325,17 @@
             document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             selectedGame = card.dataset.game;
+
+            /* Disable unsupported player counts for this game */
+            const _g = window.getGameById(selectedGame);
+            const _no3 = !!_g?.singlePanel; /* singlePanel games don't support 3P */
+            document.querySelectorAll('#player-chips .chip[data-count="3"], #player-chips-m .chip[data-count="3"]')
+              .forEach(c => c.classList.toggle('disabled', _no3));
+            if (_no3 && selectedCount === 3) {
+              const _fallback = document.querySelector('#player-chips .chip[data-count="2"]');
+              if (_fallback) onPlayerChange(_fallback);
+            }
+
             if (selectedGame === 'drawing-game' && !window.GameModules?.['drawing-game']) {
               const _s = document.createElement('script');
               _s.src = 'games/drawing-game/game.js?v=20260326';
