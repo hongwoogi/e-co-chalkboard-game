@@ -1470,6 +1470,9 @@
           const launchGame = window.getGameById(selectedGame);
           if (launchGame?.isQuiz) {
             LayoutManager.launchQuiz(effectiveCount, selectedGame);
+          } else if (launchGame?.singlePanel) {
+            LayoutManager.build(1, variant);
+            LayoutManager.loadGameInPanel(0, selectedGame);
           } else {
             LayoutManager.build(effectiveCount, variant);
             for (let i = 0; i < effectiveCount; i++) LayoutManager.loadGameInPanel(i, selectedGame);
@@ -1609,6 +1612,9 @@
         const retryGame = window.getGameById(cfg.selectedGame);
         if (retryGame?.isQuiz) {
           LayoutManager.launchQuiz(cfg.selectedCount, cfg.selectedGame);
+        } else if (retryGame?.singlePanel) {
+          LayoutManager.build(1, cfg.variant);
+          LayoutManager.loadGameInPanel(0, cfg.selectedGame);
         } else {
           LayoutManager.build(cfg.selectedCount, cfg.variant);
           for (let i = 0; i < cfg.selectedCount; i++) LayoutManager.loadGameInPanel(i, cfg.selectedGame);

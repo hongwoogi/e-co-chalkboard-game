@@ -1,182 +1,116 @@
 'use strict';
 /**
- * games/gomoku/game.js
- * "오목" — Gomoku (Five in a Row)
+ * games/gomoku/game.js  — 오목
  *
- * Shared board, 1/2/4 players.
- * Each panel shows the full board; players take turns placing stones.
- * Bottom lightbox glows when it's your turn.
- *
- * Stone colors: 흑(P1) #1e1e1e, 백(P2) #f5ede0, 청(P3) #3b82f6, 홍(P4) #ef4444
- * For 1-player: single panel, player alternates between 흑 and 백.
+ * Players: 1 (solo, alternates 흑/백) | 2 (흑 vs 백) | 4 (P1&P3 흑 vs P2&P4 백)
+ * 3-player is not supported.
+ * Single shared screen. Background color changes every turn to show whose turn it is.
  */
-
 (function registerGomoku() {
 
-  const BOARD_SIZE  = 15;
-  const STONE_COLORS = [
+  const BOARD_SIZE = 15;
+
+  /* Two stone colors only ---------------------------------------- */
+  const STONES = [
     { name: '흑', fill: '#1e1e1e', border: '#555',    label: '#ffffff' },
-    { name: '백', fill: '#f5ede0', border: '#bbb',    label: '#333333' },
-    { name: '청', fill: '#3b82f6', border: '#1d4ed8', label: '#ffffff' },
-    { name: '홍', fill: '#ef4444', border: '#b91c1c', label: '#ffffff' },
+    { name: '백', fill: '#f5ede0', border: '#bbbbbb', label: '#333333' },
   ];
 
-  /* ── Coordinator ─────────────────────────────────────────────── */
-  function createCoordinator(numPanels) {
-    /* For 1-panel: 2 colors (흑/백), the single panel controls both */
-    const numColors = numPanels === 1 ? 2 : numPanels;
-
-    const board = Array.from({ length: BOARD_SIZE }, () => new Array(BOARD_SIZE).fill(-1));
-    let currentColor = 0; /* index into STONE_COLORS */
-    let gameOver = false;
-    let panels = [];
-    let started = false;
-
-    function broadcast(ev, data) { panels.forEach(p => p.cb[ev]?.(data)); }
-
-    function findWin(r, c, color) {
-      const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-      for (const [dr, dc] of dirs) {
-        const cells = [[r, c]];
-        for (let s = 1; s <= 4; s++) {
-          const nr = r + dr*s, nc = c + dc*s;
-          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) break;
-          if (board[nr][nc] === color) cells.push([nr, nc]); else break;
-        }
-        for (let s = 1; s <= 4; s++) {
-          const nr = r - dr*s, nc = c - dc*s;
-          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) break;
-          if (board[nr][nc] === color) cells.push([nr, nc]); else break;
-        }
-        if (cells.length >= 5) return cells;
-      }
-      return null;
-    }
-
-    const _c = {
-      _gameover: false,
-      numColors,
-      getBoard()        { return board; },
-      getCurrentColor() { return currentColor; },
-
-      register(panelIdx, cb) {
-        panels.push({ panelIdx, cb });
-        if (!started && panels.length >= numPanels) {
-          started = true;
-          setTimeout(() => broadcast('turnChange', { color: currentColor }), 300);
-        }
-      },
-
-      place(panelIdx, row, col) {
-        if (gameOver) return;
-        /* In 1-panel mode, the single panel controls all colors */
-        if (numPanels > 1) {
-          /* Map panel to its color index */
-          if (panelIdx !== currentColor) return; /* not your turn */
-        }
-        if (board[row][col] !== -1) return; /* occupied */
-
-        board[row][col] = currentColor;
-        const placedColor = currentColor;
-
-        const winCells = findWin(row, col, placedColor);
-        if (winCells) {
-          gameOver = true;
-          _c._gameover = true;
-          broadcast('boardUpdate', { board, lastMove: [row, col], winCells });
-          setTimeout(() => broadcast('gameOver', { winner: placedColor, winCells }), 400);
-          return;
-        }
-
-        /* Check draw */
-        const full = board.every(r => r.every(c => c !== -1));
-        if (full) {
-          gameOver = true;
-          _c._gameover = true;
-          broadcast('boardUpdate', { board, lastMove: [row, col], winCells: null });
-          setTimeout(() => broadcast('gameOver', { winner: -1, winCells: null }), 400);
-          return;
-        }
-
-        currentColor = (currentColor + 1) % numColors;
-        broadcast('boardUpdate', { board, lastMove: [row, col], winCells: null });
-        broadcast('turnChange', { color: currentColor });
-      },
-
-      destroy() { panels = []; },
-    };
-    return _c;
+  /* Turn descriptors per player-count ----------------------------- */
+  function buildTurns(n) {
+    /* Each entry: { tag, stone(0=흑|1=백), bg, fg } */
+    if (n === 1) return [
+      { tag: '흑',    stone: 0, bg: '#27231f', fg: '#f5ede0' },
+      { tag: '백',    stone: 1, bg: '#fdf7ef', fg: '#2a2522' },
+    ];
+    if (n === 2) return [
+      { tag: '1P 흑', stone: 0, bg: '#27231f', fg: '#f5ede0' },
+      { tag: '2P 백', stone: 1, bg: '#fdf7ef', fg: '#2a2522' },
+    ];
+    /* 4-player: P1&P3 = 흑 team, P2&P4 = 백 team */
+    return [
+      { tag: '1P 흑', stone: 0, bg: '#1e1e1e', fg: '#f0e8dc' },
+      { tag: '2P 백', stone: 1, bg: '#fdf7ef', fg: '#222222' },
+      { tag: '3P 흑', stone: 0, bg: '#182030', fg: '#d8eaff' },
+      { tag: '4P 백', stone: 1, bg: '#fff5ea', fg: '#2a1a08' },
+    ];
   }
 
-  /* ── init() ──────────────────────────────────────────────────── */
-  function init(container, options) {
-    const { playerIndex = 0, onGameOver } = options || {};
-    const totalPlayers = window._gameSettings?.playerCount || 1;
-
-    if (!window._GomokuCoord || window._GomokuCoord._gameover) {
-      window._GomokuCoord?.destroy();
-      window._GomokuCoord = createCoordinator(totalPlayers);
+  /* Win detection ------------------------------------------------- */
+  function findWin(board, row, col, stoneColor) {
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    for (const [dr, dc] of dirs) {
+      const cells = [[row, col]];
+      for (let s = 1; s <= 4; s++) {
+        const nr = row + dr*s, nc = col + dc*s;
+        if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) break;
+        if (board[nr][nc] === stoneColor) cells.push([nr, nc]); else break;
+      }
+      for (let s = 1; s <= 4; s++) {
+        const nr = row - dr*s, nc = col - dc*s;
+        if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) break;
+        if (board[nr][nc] === stoneColor) cells.push([nr, nc]); else break;
+      }
+      if (cells.length >= 5) return cells;
     }
-    const coord = window._GomokuCoord;
-    const numColors = coord.numColors;
+    return null;
+  }
 
-    /* Which color(s) does this panel own?
-       1-player: panel 0 owns all colors, but coord handles turn cycling
-       2/4-player: panel owns exactly the color at its index             */
-    const myColor = totalPlayers === 1 ? -1 : playerIndex; /* -1 = owns all (1p mode) */
+  /* ── init() ───────────────────────────────────────────────────── */
+  function init(container, options) {
+    const { onGameOver } = options || {};
+    let n = window._gameSettings?.playerCount || 2;
+    if (n === 3) n = 2; /* 3-player unsupported → 2-player */
+    n = Math.min(n, 4);
 
-    let dead = false;
+    const turns = buildTurns(n);
+    let turnIdx  = 0;
+    let dead     = false;
+    let gameOver = false;
+    let lastMove = null;
     let winCells = null;
+
+    const board = Array.from({ length: BOARD_SIZE }, () => new Array(BOARD_SIZE).fill(-1));
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;background:#f7f3ee;position:relative;';
+    container.style.cssText =
+      'display:flex;flex-direction:column;height:100%;overflow:hidden;' +
+      'position:relative;transition:background 0.3s;';
 
     /* Canvas wrapper */
     const canvasWrap = el('div', {
-      style: 'flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:6px;',
+      style: 'flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;',
     });
-    const canvas = document.createElement('canvas');
-    canvas.style.cssText = 'touch-action:none;cursor:pointer;border-radius:6px;';
+    const canvas = el('canvas', { style: 'touch-action:none;cursor:pointer;border-radius:8px;' });
     canvasWrap.appendChild(canvas);
 
-    /* Bottom lightbox bar */
+    /* Bottom turn bar */
     const bottomBar = el('div', {
-      style: 'flex-shrink:0;display:flex;gap:0;border-top:2px solid #ddd;background:#fff;',
+      style: 'flex-shrink:0;display:flex;align-items:center;justify-content:center;' +
+             'gap:10px;padding:10px 14px;transition:background 0.3s;border-top:2px solid rgba(0,0,0,0.12);',
     });
-
+    const stoneDot = el('div', {
+      style: 'width:22px;height:22px;border-radius:50%;flex-shrink:0;transition:background 0.3s,border-color 0.3s;',
+    });
+    const turnLabel = el('div', {
+      style: 'font-size:1rem;font-weight:bold;letter-spacing:1px;transition:color 0.3s;',
+    });
+    const turnSub = el('div', {
+      style: 'font-size:0.75rem;opacity:0.65;transition:color 0.3s;',
+    });
+    const labelWrap = el('div', { style: 'display:flex;flex-direction:column;gap:2px;' });
+    labelWrap.append(turnLabel, turnSub);
+    bottomBar.append(stoneDot, labelWrap);
     container.append(canvasWrap, bottomBar);
 
-    /* Build lightbox cells for each color */
-    const lightboxCells = [];
-    for (let i = 0; i < numColors; i++) {
-      const sc = STONE_COLORS[i];
-      const cell = el('div', {
-        style: `flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-                padding:8px 4px 6px;gap:4px;transition:background 0.2s;
-                ${i > 0 ? 'border-left:1px solid #ddd;' : ''}`,
-      });
-      const dot = el('div', {
-        style: `width:20px;height:20px;border-radius:50%;
-                background:${sc.fill};border:2px solid ${sc.border};
-                transition:box-shadow 0.2s, transform 0.2s;`,
-      });
-      const lbl = el('div', {
-        style: 'font-size:0.65rem;color:#888;font-weight:bold;letter-spacing:1px;',
-        text: sc.name,
-      });
-      cell.append(dot, lbl);
-      bottomBar.append(cell);
-      lightboxCells.push({ cell, dot });
-    }
-
-    /* ── Canvas drawing ───────────────────────────────────────── */
+    /* ── Canvas ──────────────────────────────────────────────── */
     const DPR = window.devicePixelRatio || 1;
     let cellSize = 0;
 
     function resizeCanvas() {
-      const w = canvasWrap.clientWidth  - 12;
-      const h = canvasWrap.clientHeight - 12;
+      const w = canvasWrap.clientWidth  - 16;
+      const h = canvasWrap.clientHeight - 16;
       const size = Math.floor(Math.min(w, h));
       cellSize = size / BOARD_SIZE;
       canvas.width  = size * DPR;
@@ -186,15 +120,14 @@
       drawBoard();
     }
 
-    let _lastMove = null, _winCells = null, _board = coord.getBoard();
-
     function drawBoard() {
       const ctx = canvas.getContext('2d');
-      const sz  = canvas.width; /* physical pixels */
+      const sz  = canvas.width;
       const cs  = cellSize * DPR;
+
       ctx.clearRect(0, 0, sz, sz);
 
-      /* Board background */
+      /* Wooden board */
       ctx.fillStyle = '#dcb483';
       ctx.fillRect(0, 0, sz, sz);
 
@@ -207,10 +140,9 @@
         ctx.beginPath(); ctx.moveTo(0.5 * cs, x); ctx.lineTo((BOARD_SIZE - 0.5) * cs, x); ctx.stroke();
       }
 
-      /* Star points (天元 + 4 corners) */
-      const stars = [[3,3],[3,11],[7,7],[11,3],[11,11]];
+      /* Star points */
       ctx.fillStyle = '#8b6a3a';
-      for (const [r, c] of stars) {
+      for (const [r, c] of [[3,3],[3,11],[7,7],[11,3],[11,11]]) {
         ctx.beginPath();
         ctx.arc((c + 0.5) * cs, (r + 0.5) * cs, cs * 0.12, 0, Math.PI * 2);
         ctx.fill();
@@ -219,142 +151,139 @@
       /* Stones */
       for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
-          const v = _board[r][c];
+          const v = board[r][c];
           if (v === -1) continue;
-          const sc = STONE_COLORS[v];
+          const st = STONES[v];
           const cx = (c + 0.5) * cs, cy = (r + 0.5) * cs, rad = cs * 0.43;
 
-          /* Winning cell highlight */
-          if (_winCells) {
-            const isWin = _winCells.some(([wr, wc]) => wr === r && wc === c);
-            if (isWin) {
-              ctx.save();
-              ctx.fillStyle = 'rgba(255,220,0,0.5)';
-              ctx.beginPath(); ctx.arc(cx, cy, rad * 1.3, 0, Math.PI * 2); ctx.fill();
-              ctx.restore();
-            }
+          if (winCells?.some(([wr, wc]) => wr === r && wc === c)) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(255,220,0,0.55)';
+            ctx.beginPath(); ctx.arc(cx, cy, rad * 1.35, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
           }
 
-          ctx.fillStyle = sc.fill;
+          ctx.fillStyle = st.fill;
           ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = sc.border;
+          ctx.strokeStyle = st.border;
           ctx.lineWidth   = DPR * 1.5;
           ctx.stroke();
         }
       }
 
-      /* Last move dot */
-      if (_lastMove) {
-        const [lr, lc] = _lastMove;
-        const v = _board[lr][lc];
+      /* Last-move dot */
+      if (lastMove) {
+        const [lr, lc] = lastMove;
+        const v = board[lr][lc];
         if (v !== -1) {
-          const sc = STONE_COLORS[v];
+          ctx.fillStyle = STONES[v].label;
           const cx = (lc + 0.5) * cs, cy = (lr + 0.5) * cs;
-          ctx.fillStyle = sc.label;
           ctx.beginPath(); ctx.arc(cx, cy, cs * 0.1, 0, Math.PI * 2); ctx.fill();
         }
       }
     }
 
-    /* ── Tap to place stone ───────────────────────────────────── */
-    function onCanvasTap(e) {
-      if (dead) return;
-      e.preventDefault();
-      const currentColor = coord.getCurrentColor();
-      /* Check if this panel is allowed to place */
-      if (totalPlayers > 1 && myColor !== currentColor) return;
-      if (coord._gameover) return;
+    /* ── Turn UI ─────────────────────────────────────────────── */
+    function applyTurnUI() {
+      const t  = turns[turnIdx];
+      const st = STONES[t.stone];
 
-      const rect = canvas.getBoundingClientRect();
+      container.style.background = t.bg;
+      bottomBar.style.background = 'rgba(0,0,0,0.18)';
+      turnLabel.style.color      = t.fg;
+      turnLabel.textContent      = t.tag + ' 차례';
+      turnSub.style.color        = t.fg;
+      turnSub.textContent        = n === 4
+        ? (t.stone === 0 ? '흑 팀 (1P · 3P)' : '백 팀 (2P · 4P)')
+        : '';
+
+      stoneDot.style.background   = st.fill;
+      stoneDot.style.border       = `2px solid ${st.border}`;
+      stoneDot.style.boxShadow    = `0 0 10px 3px ${st.fill}99`;
+    }
+
+    applyTurnUI();
+
+    /* ── Tap to place stone ──────────────────────────────────── */
+    function onTap(e) {
+      if (dead || gameOver) return;
+      e.preventDefault();
+
+      const rect   = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const relX = clientX - rect.left;
-      const relY = clientY - rect.top;
-      const col = Math.floor(relX / cellSize);
-      const row = Math.floor(relY / cellSize);
+      const col = Math.floor((clientX - rect.left)  / cellSize);
+      const row = Math.floor((clientY - rect.top)   / cellSize);
       if (col < 0 || col >= BOARD_SIZE || row < 0 || row >= BOARD_SIZE) return;
-      coord.place(playerIndex, row, col);
-    }
+      if (board[row][col] !== -1) return;
 
-    canvas.addEventListener('click', onCanvasTap);
-    canvas.addEventListener('touchend', onCanvasTap, { passive: false });
+      const t = turns[turnIdx];
+      board[row][col] = t.stone;
+      lastMove = [row, col];
 
-    /* ── Lightbox helpers ─────────────────────────────────────── */
-    function setActiveLightbox(activeColor) {
-      for (let i = 0; i < numColors; i++) {
-        const { cell, dot } = lightboxCells[i];
-        const sc = STONE_COLORS[i];
-        if (i === activeColor) {
-          cell.style.background = sc.fill + '22';
-          dot.style.boxShadow   = `0 0 14px 4px ${sc.fill}99`;
-          dot.style.transform   = 'scale(1.3)';
-        } else {
-          cell.style.background = '';
-          dot.style.boxShadow   = 'none';
-          dot.style.transform   = 'scale(1)';
-        }
+      const wc = findWin(board, row, col, t.stone);
+      if (wc) {
+        winCells = wc;
+        gameOver = true;
+        drawBoard();
+        showWinOverlay(t, wc);
+        if (onGameOver) onGameOver(0);
+        return;
       }
+
+      if (board.every(r => r.every(c => c !== -1))) {
+        gameOver = true;
+        drawBoard();
+        showDrawOverlay();
+        if (onGameOver) onGameOver(0);
+        return;
+      }
+
+      turnIdx = (turnIdx + 1) % turns.length;
+      drawBoard();
+      applyTurnUI();
     }
 
-    /* ── Coordinator callbacks ────────────────────────────────── */
-    coord.register(playerIndex, {
-      boardUpdate({ board, lastMove, winCells: wc }) {
-        _board    = board;
-        _lastMove = lastMove;
-        _winCells = wc;
-        drawBoard();
-      },
+    canvas.addEventListener('click',    onTap);
+    canvas.addEventListener('touchend', onTap, { passive: false });
 
-      turnChange({ color }) {
-        setActiveLightbox(color);
-        /* For 1-player mode, indicate whose turn via canvas cursor */
-        if (totalPlayers === 1) {
-          const sc = STONE_COLORS[color];
-          canvas.style.cursor = 'pointer';
-          /* Show turn label overlay briefly — handled by lightbox */
-        }
-      },
+    /* ── Overlays ────────────────────────────────────────────── */
+    function showWinOverlay(t, wc) {
+      const st = STONES[t.stone];
+      const teamLabel = n === 4
+        ? ` (${t.stone === 0 ? '흑 팀' : '백 팀'} 승리!)`
+        : '';
+      const overlay = el('div', {
+        style: 'position:absolute;inset:0;display:flex;flex-direction:column;' +
+               'align-items:center;justify-content:center;text-align:center;' +
+               'background:rgba(255,253,248,0.95);backdrop-filter:blur(4px);padding:24px;',
+      });
+      overlay.innerHTML = `
+        <div style="font-size:2.8rem;">🏆</div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:10px;justify-content:center;">
+          <div style="width:28px;height:28px;border-radius:50%;background:${st.fill};border:2px solid ${st.border};"></div>
+          <div style="font-size:1.3rem;font-weight:bold;color:#1a1a2e;">${t.tag}${teamLabel}</div>
+        </div>
+        <div style="font-size:0.9rem;color:#888;margin-top:8px;">5목 완성!</div>
+      `;
+      container.appendChild(overlay);
+    }
 
-      gameOver({ winner, winCells: wc }) {
-        _winCells = wc;
-        drawBoard();
+    function showDrawOverlay() {
+      const overlay = el('div', {
+        style: 'position:absolute;inset:0;display:flex;flex-direction:column;' +
+               'align-items:center;justify-content:center;text-align:center;' +
+               'background:rgba(255,253,248,0.95);backdrop-filter:blur(4px);padding:24px;',
+      });
+      overlay.innerHTML = `
+        <div style="font-size:2.8rem;">🤝</div>
+        <div style="font-size:1.2rem;font-weight:bold;color:#1a1a2e;margin-top:14px;">무승부!</div>
+        <div style="font-size:0.9rem;color:#888;margin-top:8px;">모든 칸이 채워졌어요</div>
+      `;
+      container.appendChild(overlay);
+    }
 
-        /* Dim all lightboxes */
-        for (const { cell, dot } of lightboxCells) {
-          cell.style.background = '';
-          dot.style.boxShadow   = 'none';
-          dot.style.transform   = 'scale(1)';
-        }
-
-        const overlay = el('div', {
-          style: `position:absolute;inset:0;display:flex;flex-direction:column;
-                  align-items:center;justify-content:center;text-align:center;
-                  background:rgba(255,253,248,0.95);backdrop-filter:blur(4px);padding:20px;`,
-        });
-
-        if (winner === -1) {
-          overlay.innerHTML = `
-            <div style="font-size:2.5rem;">🤝</div>
-            <div style="font-size:1.1rem;font-weight:bold;color:#1a1a2e;margin-top:12px;">무승부!</div>
-            <div style="font-size:0.85rem;color:#888;margin-top:6px;">모든 칸이 채워졌어요</div>
-          `;
-        } else {
-          const sc = STONE_COLORS[winner];
-          overlay.innerHTML = `
-            <div style="font-size:2.5rem;">🏆</div>
-            <div style="margin-top:12px;display:flex;align-items:center;gap:8px;justify-content:center;">
-              <div style="width:28px;height:28px;border-radius:50%;background:${sc.fill};border:2px solid ${sc.border};"></div>
-              <div style="font-size:1.2rem;font-weight:bold;color:#1a1a2e;">${sc.name} 승리!</div>
-            </div>
-            <div style="font-size:0.85rem;color:#888;margin-top:6px;">5목 완성!</div>
-          `;
-        }
-        container.appendChild(overlay);
-        if (onGameOver) onGameOver(winner === playerIndex ? 1 : 0);
-      },
-    });
-
-    /* ── ResizeObserver for responsive canvas ─────────────────── */
+    /* ── ResizeObserver ──────────────────────────────────────── */
     const ro = new ResizeObserver(() => resizeCanvas());
     ro.observe(canvasWrap);
 
