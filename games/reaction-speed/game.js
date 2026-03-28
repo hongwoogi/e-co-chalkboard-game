@@ -5,10 +5,11 @@
  * "반응속도" — Reaction Speed Game
  *
  * Gameplay:
- *  1. Screen shows a dark waiting state.
+ *  1. Screen shows a waiting state. Tap button is visible but muted.
  *  2. After a random delay (2–5s), screen flashes bright green.
  *  3. Tap as fast as possible.
  *  4. Score = max(0, 1000 - reaction_ms). 5 rounds total.
+ *  Early tap: score = max(0, 1000 - earlyGap_ms). Round ends, game continues.
  */
 
 (function registerReactionSpeed() {
@@ -25,12 +26,22 @@
     return { pts, label, color };
   }
 
+  function calcEarlyScore(earlyMs) {
+    const pts = Math.max(0, 1000 - Math.round(earlyMs));
+    let label, color;
+    if (earlyMs < 100)      { label = '😅 거의 맞았어요'; color = '#fdd34d'; }
+    else if (earlyMs < 300) { label = '⚠️ 조금 일찍';     color = '#fd8863'; }
+    else if (earlyMs < 700) { label = '🙁 많이 일찍';     color = '#f87171'; }
+    else                    { label = '❌ 너무 일찍!';     color = '#f87171'; }
+    return { pts, label, color };
+  }
+
   /* ── Coordinator ─────────────────────────────────────────────── */
   function createCoordinator(totalPlayers) {
     const TOTAL_ROUNDS = 5;
     let panels = [], started = false, currentRound = 0;
     let flashTimer = null, roundTimer = null, pressedSet = new Set();
-    let flashedAt = 0, flashed = false;
+    let flashedAt = 0, flashed = false, expectedFlashAt = 0;
 
     function broadcast(ev, data) { panels.forEach(p => p.cb[ev]?.(data)); }
 
@@ -41,14 +52,13 @@
       flashed = false;
       broadcast('roundStart', { round: currentRound, totalRounds: TOTAL_ROUNDS });
 
-      /* Random delay 2–5s before flash */
       const delay = 2000 + Math.random() * 3000;
+      expectedFlashAt = Date.now() + delay;
       flashTimer = setTimeout(() => {
         flashedAt = Date.now();
         flashed = true;
         broadcast('flash', {});
 
-        /* Auto-advance if nobody taps within 3s */
         roundTimer = setTimeout(() => {
           broadcast('roundOver', { flashedAt });
           setTimeout(startRound, 3000);
@@ -71,7 +81,7 @@
       },
 
       playerTapped(playerIndex) {
-        if (!flashed) return; /* too early — handled per-panel */
+        if (!flashed) return;
         pressedSet.add(playerIndex);
         if (pressedSet.size >= totalPlayers) {
           clearTimeout(roundTimer);
@@ -80,14 +90,18 @@
         }
       },
 
-      playerTappedEarly(playerIndex) {
+      /* Early tap: cancel flash, score by gap, end round */
+      playerTappedEarly(playerIndex, tapAt) {
         clearTimeout(flashTimer);
         clearTimeout(roundTimer);
-        endGame();
+        pressedSet.add(playerIndex);
+        const earlyMs = Math.max(0, expectedFlashAt - tapAt);
+        broadcast('earlyRoundOver', { earlyMs });
+        setTimeout(startRound, 2500);
       },
 
-      isFlashed() { return flashed; },
-      getFlashedAt() { return flashedAt; },
+      getFlashedAt()         { return flashedAt; },
+      getExpectedFlashAt()   { return expectedFlashAt; },
       destroy() { clearTimeout(flashTimer); clearTimeout(roundTimer); panels = []; },
     };
     return _c;
@@ -104,7 +118,7 @@
     }
     const coord = window._ReactionCoord;
 
-    let myScore = 0, phase = 'waiting', dead = false, tooEarly = false, enabledAt = 0, pressedAt = 0;
+    let myScore = 0, phase = 'waiting', dead = false, enabledAt = 0, pressedAt = 0;
 
     /* ── DOM ──────────────────────────────────────────────────── */
     container.innerHTML = '';
@@ -133,7 +147,6 @@
               font-family:var(--font-body);transition:all 0.1s;letter-spacing:1px;`,
       text: '탭!',
     });
-    tapBtn.disabled = true;
 
     const timeEl = el('div', { style: `font-size:0.85rem;color:#555;`, text: '' });
     center.append(msgEl, tapBtn, timeEl);
@@ -146,54 +159,59 @@
 
     container.append(header, center, overlay);
 
-    /* ── Early tap: listen on the whole container ─────────────── */
-    function handleEarlyTap(e) {
-      if (phase !== 'waiting_flash') return;
-      e.preventDefault();
-      tooEarly = true;
-      phase = 'too_early';
-      dead = true;
-      setWaiting();
-      msgEl.textContent = '너무 일찍!';
-      msgEl.style.color = '#f87171';
-      timeEl.textContent = '';
-      coord.playerTappedEarly(playerIndex);
-    }
-    container.addEventListener('touchend', handleEarlyTap, { passive: false });
-    container.addEventListener('click',    handleEarlyTap);
-
     /* ── Helpers ──────────────────────────────────────────────── */
     function setWaiting() {
       container.style.background = '#f7f3ee';
-      tapBtn.disabled = true;
+      /* Button stays enabled — early taps register */
       tapBtn.style.background = 'rgba(0,0,0,0.07)';
-      tapBtn.style.color = 'rgba(0,0,0,0.3)';
+      tapBtn.style.color      = 'rgba(0,0,0,0.3)';
       tapBtn.style.borderColor = 'rgba(0,0,0,0.15)';
-      tapBtn.style.boxShadow = '0 5px 0 rgba(0,0,0,0.2)';
+      tapBtn.style.boxShadow  = '0 5px 0 rgba(0,0,0,0.2)';
+      tapBtn.disabled = false;
     }
 
-    /* Track when the user's finger/mouse first pressed the button */
     tapBtn.addEventListener('pointerdown', () => { pressedAt = performance.now(); });
 
     function setFlash() {
       container.style.background = '#d4f0d4';
-      tapBtn.disabled = false;
       enabledAt = performance.now();
-      tapBtn.style.background = `linear-gradient(135deg,${playerColor},color-mix(in srgb,${playerColor} 60%,#000))`;
-      tapBtn.style.color = '#1a1a2e';
+      tapBtn.style.background  = `linear-gradient(135deg,${playerColor},color-mix(in srgb,${playerColor} 60%,#000))`;
+      tapBtn.style.color       = '#1a1a2e';
       tapBtn.style.borderColor = playerColor;
-      tapBtn.style.boxShadow = `0 0 40px color-mix(in srgb,${playerColor} 50%,transparent)`;
+      tapBtn.style.boxShadow   = `0 0 40px color-mix(in srgb,${playerColor} 50%,transparent)`;
+      tapBtn.disabled = false;
     }
 
     function showOverlay(html) { overlay.innerHTML = html; overlay.style.display = 'flex'; }
     function hideOverlay()     { overlay.style.display = 'none'; }
 
     /* ── Button tap ───────────────────────────────────────────── */
-    tapBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); /* prevent container handler from double-firing */
-      if (phase !== 'flash' || dead) return;
-      /* Reject if the press started before the flash (finger was already on button) */
-      if (pressedAt < enabledAt) return;
+    tapBtn.addEventListener('click', () => {
+      if (dead) return;
+
+      /* ── Early tap ── */
+      if (phase === 'waiting_flash') {
+        phase = 'early_pressed';
+        tapBtn.disabled = true;
+        const tapAt  = Date.now();
+        const earlyMs = Math.max(0, coord.getExpectedFlashAt() - tapAt);
+        const result  = calcEarlyScore(earlyMs);
+        myScore += result.pts;
+        coord._scores[playerIndex] = myScore;
+        scoreEl.textContent = `점수: ${myScore}`;
+        showOverlay(`
+          <div style="font-size:0.9rem;color:#f87171;margin-bottom:6px;">⚠️ 너무 일찍!</div>
+          <div style="font-size:2.5rem;font-weight:bold;color:#1a1a2e;">${earlyMs}ms 빠름</div>
+          <div style="font-size:1.4rem;font-weight:bold;color:${result.color};margin-top:8px;">${result.label}</div>
+          <div style="font-size:1.1rem;color:${result.color};margin-top:4px;">+${result.pts}점</div>
+        `);
+        coord.playerTappedEarly(playerIndex, tapAt);
+        return;
+      }
+
+      /* ── Normal tap ── */
+      if (phase !== 'flash') return;
+      if (pressedAt < enabledAt) return; /* finger was already down before flash */
 
       const ms = Date.now() - coord.getFlashedAt();
       const result = calcScore(ms);
@@ -209,7 +227,6 @@
         <div style="font-size:1.5rem;font-weight:bold;color:${result.color};margin-top:8px;">${result.label}</div>
         <div style="font-size:1.2rem;color:${result.color};margin-top:4px;">+${result.pts}점</div>
       `);
-
       coord.playerTapped(playerIndex);
     });
 
@@ -217,7 +234,6 @@
     coord.register(playerIndex, {
       roundStart({ round, totalRounds }) {
         phase = 'waiting_flash';
-        tooEarly = false;
         setWaiting();
         hideOverlay();
         roundEl.textContent = `${round} / ${totalRounds} 라운드`;
@@ -227,7 +243,7 @@
       },
 
       flash() {
-        if (tooEarly) return;
+        if (phase !== 'waiting_flash') return;
         phase = 'flash';
         setFlash();
         msgEl.textContent = '지금!';
@@ -235,32 +251,30 @@
         timeEl.textContent = '';
       },
 
-      roundOver({ flashedAt: fa }) {
-        if (phase !== 'pressed') {
-          /* didn't tap in time */
-          phase = 'roundover';
-          setWaiting();
-          const penalty = tooEarly ? '너무 일찍 눌렀어요' : '시간이 지났어요';
-          showOverlay(`
-            <div style="font-size:2rem;">⏰</div>
-            <div style="font-size:1rem;color:#f87171;margin-top:8px;">${penalty}</div>
-            <div style="font-size:0.9rem;color:#888;margin-top:4px;">+0점</div>
-          `);
-        }
+      earlyRoundOver({ earlyMs }) {
+        /* already showed overlay in button handler */
         phase = 'roundover';
+        container.style.background = '#f7f3ee';
+      },
+
+      roundOver({ flashedAt: fa }) {
+        if (phase === 'pressed' || phase === 'early_pressed') { phase = 'roundover'; return; }
+        phase = 'roundover';
+        setWaiting();
+        tapBtn.disabled = true;
+        showOverlay(`
+          <div style="font-size:2rem;">⏰</div>
+          <div style="font-size:1rem;color:#f87171;margin-top:8px;">시간이 지났어요</div>
+          <div style="font-size:0.9rem;color:#888;margin-top:4px;">+0점</div>
+        `);
       },
 
       gameOver() {
         phase = 'gameover';
+        tapBtn.disabled = true;
         const maxScore = Math.max(0, ...Object.values(coord._scores));
         const isWinner = myScore === maxScore && myScore > 0;
-        const earlyOut = tooEarly;
-        showOverlay(earlyOut ? `
-          <div style="font-size:2.5rem;">🚫</div>
-          <div style="font-size:1.1rem;color:#f87171;margin-top:10px;font-weight:bold;">너무 일찍 눌렀어요!</div>
-          <div style="font-size:0.9rem;color:#888;margin-top:6px;">초록불이 켜질 때까지 기다려야 해요</div>
-          <div style="font-size:1.8rem;font-weight:bold;margin-top:12px;color:#1a1a2e;">총점: ${myScore}</div>
-        ` : `
+        showOverlay(`
           <div style="font-size:2.5rem;">${isWinner ? '🏆' : '⚡'}</div>
           <div style="font-size:1rem;color:#fdd34d;margin-top:10px;">게임 종료</div>
           <div style="font-size:2rem;font-weight:bold;margin-top:8px;color:#1a1a2e;">총점: ${myScore}</div>
